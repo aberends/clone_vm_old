@@ -1,0 +1,340 @@
+VIRTUALIZATION_WITH_KVM
+
+
+OBJECTIVE
+
+Explain how virtualization with KVM works.
+
+
+AUTHOR
+
+Allard Berends (AB)
+
+
+HISTORY
+
+Date with 'LC_TIME=en_US date +"\%d-\%b-\%Y \%H:\%M", '.
+10-Feb-2019 10:02, AB, start
+
+
+REFERENCES
+
+[kvm_wp]          Kernel-based Virtual Machine,
+                  https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine
+
+
+ABBREVIATIONS
+
+KVM               Kernel-based Virtual Machine
+
+
+TERMS
+
+KVM               Kernel-based Virtual Machine (KVM) is a
+                  virtualization module in the Linux kernel
+                  that allows the kernel to function as a
+                  hypervisor. More information on [kvm_wp].
+
+
+SECTIONS
+
+Create with:
+- delete current entries
+- save file
+- exter "ex" mode by typing ':'
+- r !sed -n 's/^\([A-Z0-9][A-Z_0-9]*\)$/- \1/p' %:p
+
+
+RPMS_AND_GROUPS_PREREQUISITES
+
+TODO: update the text in this section based on the
+information obtained within a clean installation on a
+CentOS7 host.
+
+We use the following commands:
+
+- guestfish
+- virsh
+- virt-clone
+- virt-manager
+- virt-resize
+- virt-xml
+
+In the CentOS7 yum repositories a number of groups related
+to virtualization exist. They can be found with the
+following command:
+
+# yum group list ids hidden | grep -i virtualization
+   Virtualization Host (virtualization-host-environment)
+   Virtualization Hypervisor (virtualization-hypervisor)
+   Virtualization Tools (virtualization-tools)
+   Virtualization Client (virtualization-client)
+   Virtualization Platform (virtualization-platform)
+
+We install the groups with:
+
+# yum group install virtualization-host-environment virtualization-hypervisor virtualization-tools virtualization-client virtualization-platform
+
+We check if we have all the commands we need:
+
+# for i in guestfish virsh virt-clone virt-manager virt-resize virt-xml; do which $i; done
+/usr/bin/which: no guestfish in (/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin)
+/bin/virsh
+/bin/virt-clone
+/bin/virt-manager
+/usr/bin/which: no virt-resize in (/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin)
+/bin/virt-xml
+
+So we are missing guestfish and virt-resize commands. In
+which packages do these commands reside?
+
+# yum provides '*/guestfish'
+.. truncated ..
+libguestfs-tools-c
+
+BTW, in the output we also see the package
+libguestfs-bash-completion, which is of interest.
+
+# yum provides '*/virt-resize'
+.. truncated ..
+libguestfs-tools-c
+
+So, do these packages reside in groups of interest? To query
+yum groups for packages we first need to install a yum
+plugin:
+
+# yum -y install yum-plugin-list-data
+
+Now we can query for the packages to find out if they reside
+in yum groups:
+
+# yum list-groups libguestfs-tools-c 
+Loaded plugins: fastestmirror, langpacks, list-data
+Loading mirror speeds from cached hostfile
+ * base: mirror.yourwebhoster.eu
+ * epel: ams.edge.kernel.org
+ * extras: centos.mirror.triple-it.nl
+ * updates: centos.mirror.triple-it.nl
+==================== Available Packages ====================
+Virtualization Client      1 ( 50%)
+Virtualization Tools       1 ( 50%)
+list-groups done
+
+We already installed both groups. So why don't we have
+libguestfs-tools-c? We look for information about the groups
+with:
+
+# yum group info 'Virtualization Client'
+# yum group info 'Virtualization Tools'
+
+It turns out that libguestfs-tools-c is listed as optional
+in both 'Virtualization Client' and 'Virtualization Tools'.
+
+We install the optional packages of both groups with:
+
+# yum --setopt=group_package_types=optional -y group install 'Virtualization Client' 'Virtualization Tools'
+
+Alas, the command does not work. Even setting the following
+line in our "[main]" section of yum.conf does not work:
+
+# grep group_package_types /etc/yum.conf
+group_package_types=default, mandatory, optional
+
+So, we install the package with a normal install:
+
+yum -y install libguestfs-tools-c
+
+
+VIRTUALIZATION_SERVICE
+
+In order to use KVM, the virtualization service must run.
+Hence we configure:
+
+#
+systemctl enable libvirtd.service
+systemctl start libvirtd.service
+systemctl is-active libvirtd.service
+# shows "active"
+systemctl is-enabled libvirtd.service
+# shows "enabled"
+
+Make sure the default network is setup and starts at boot
+time:
+
+# virsh net-list --autostart
+ Name                 State      Autostart     Persistent
+----------------------------------------------------------
+ default              active     yes           yes
+
+To figure out the IPv4 range of the default network:
+
+# virsh net-dumpxml default
+<network>
+  <name>default</name>
+  <uuid>19828e4a-4081-4a40-8717-cc046cb82e3a</uuid>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <bridge name='virbr0' stp='on' delay='0'/>
+  <mac address='52:54:00:3d:26:fc'/>
+  <ip address='192.168.122.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.122.2' end='192.168.122.254'/>
+    </dhcp>
+  </ip>
+</network>
+
+To see the status of the virtual bridge of the default
+network:
+
+# ip -4 addr show dev virbr0
+4: virbr0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0
+       valid_lft forever preferred_lft forever
+
+The NO-CARRIER means that the bridge is not connected to a
+medium.
+
+Physical network interfaces have a different set of flags.
+Notably the LOWER_UP flag. See netdevice(7). It means that a
+cable is connected to the ethernet port. For example:
+
+# ip -4 addr show dev enp0s31f6
+2: enp0s31f6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    inet 192.168.178.62/24 brd 192.168.178.255 scope global noprefixroute dynamic enp0s31f6
+       valid_lft 2686sec preferred_lft 2686sec
+
+The virb0 device is a virtual device. Hence it cannot be
+connected to a cable and show the state LOWER_UP. The
+states NO-CARRIER and LOWER_UP are opposites.
+
+
+ENABLE_VIRT_MANAGER
+
+From another machine we use SSH to log in on our laptop
+running KVM with the libvirtd service. Under a standard
+user, we try to run virt-manager:
+
+$ virt-manager
+$
+(virt-manager:29390): Gtk-WARNING **: 14:27:03.938: cannot open display:
+^C
+
+To solve this issue, log in over SSH with the "-X" flag. The
+first time we get the warning:
+
+/usr/bin/xauth:  file /home/allard/.Xauthority does not exist
+
+We can ignore it. It means that xauth has created the
+.Xauthority file for the user.
+
+Now we use virt-manager again and it works but gives a
+warning. What does the warning mean?
+
+If we use virt-manager on the laptop directly, a security
+pop-up modal window is shown. The word "modal" means that
+the pop-up window takes over control. So either you provide
+the information or you cancel the operation, but you can not
+do anything else on the GUI. This is what a modal window
+means.
+
+Being logged in over SSH means that the policy-kit cannot
+pop-up the modal window and ask the user for a password. So,
+we need to tell policy-kit to allow the user to run
+virt-manager. It is done like this:
+
+# usermod -a -G libvirt allard
+
+Now the user allard can run virt-manager directly on the
+laptop withouth having to answer the pop-up window.
+Furthermore, since the pop-up is not launched any longer,
+the user can also start virt-manager over SSH with the "-X"
+for X11 forwarding option.
+
+
+CENTOS7_TEMPLATE
+
+In this section we describe how to setup a CentOS7 template.
+This template is used to clone from to create a new Virtual
+Machine.
+
+The CentOS7 template is a CentOS7 VM that is shrunk after
+installation. The first step is to install a VM.
+
+We need the CentOS7 minimal installation ISO for this task:
+
+$
+# Go tho home directory of the user.
+cd
+# Obtain the ISO redirect URL from CentOS for the minimal
+# install.
+URL=$(curl -s https://www.centos.org/download/ | grep -o 'http://.*-x86_64-Minimal-.*\.iso')
+# Obtain the ISO file.
+ISOFILE=$(echo $URL | sed 's#.*/##')
+# Check if the ISO is already downloaded in the home
+# directory of the user. Otherwise download it.
+[ -f "$ISOFILE" ] || wget $URL
+
+During the installation virt-manager shows a pop-up with the
+question: The emulator may not have search permissions for
+the path ... Do you want to correct this now?
+
+If you say yes, the installer executes setfacl to correct
+the permissions. We do it on the command line to avoid this
+pop-up altogether:
+
+$ setfacl -m u:qemu:x .
+
+Note, if you want to experiment with the ACL, it can be
+removed with:
+
+$ setfacl -x u:qemu: .
+
+Calculate the MAC address:
+
+$ printf "52:54:%2.2x:%2.2x:%2.2x:%2.2x\n" 192 168 122 3
+52:54:c0:a8:7a:03
+
+
+UNATTENDED_WITH_VIRT_INSTALL
+
+Obtain possible OS variants that can be used in KVM:
+
+# osinfo-query os | grep -i centos
+.. centos7.0 is what we use ..
+
+Prior to installation a libvirt storage volume is needed. We
+give it the name of the domain, i.e. tpl004 and the size of
+5 GiB. It is created with:
+
+# virsh vol-create-as os tpl004 5g
+
+Any remnants of a previous tpl004 VM are removed:
+
+#
+virsh destroy tpl004
+virsh undefine tpl004
+
+Information is given in virt-install(1). The options are in
+the order of virt-install(1).
+
+virt-install \
+  --connect qemu:///system \
+  --name=tpl004 \
+  --memory=1024 \
+  --arch=x86_64 \
+  --metadata=description="CentOS7 template" \
+  --vcpus=vcpus=1 \
+  --location=/home/allard/CentOS-7-x86_64-Minimal-1810.iso \
+  --extra-args="ks=file:/tpl004.ks console=ttyS0,115200" \
+  --initrd-inject=/home/allard/tpl004.ks \
+  --os-variant=centos7.0 \
+  --boot=hd,cdrom \
+  --disk=vol=os/tpl004,device=disk,bus=virtio \
+  --network=network=default,mac=52:54:c0:a8:7a:04 \
+  --graphics=none \
+  --hvm \
+  --autostart
+
