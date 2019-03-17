@@ -1,0 +1,6 @@
+---
+
+- name: Test restoreroot role
+  hosts: all
+  roles:
+    - restoreroot

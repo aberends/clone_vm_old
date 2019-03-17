@@ -1,0 +1,37 @@
+---
+
+- name: Partition data disk
+  block:
+
+  - name: Obtain information about current partitions
+    parted:
+      device: /dev/vdb
+      unit: MiB
+    register: partitions_info
+
+  - name: Remove existing partitions
+    parted:
+      device: /dev/vdb
+      number: "{{ item.num }}"
+      state: absent
+    loop: "{{ partitions_info.partitions }}"
+    when: (partitions_info.partitions|length > 1) or
+          (partitions_info.partitions|length == 1 and
+           partitions_info.disk.size != partitions_info.partitions.0.end)
+
+  - name: Partition the given disk
+    parted:
+      device: /dev/vdb
+      label: msdos
+      number: 1
+      part_start: 0%
+      part_end: 100%
+      state: present
+
+  - name: Create XFS filesystem on disk
+    filesystem:
+      dev: /dev/vdb1
+      fstype: xfs
+      force: yes
+
+  become: True

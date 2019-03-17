@@ -1,0 +1,6 @@
+---
+
+# AB: set this parameter to true to force this role to run.
+# This is handy if you want to recreate the template
+# although not a new version of the ISO has been downloaded.
+isochanged_skip: false

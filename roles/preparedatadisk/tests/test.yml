@@ -1,0 +1,6 @@
+---
+
+- name: Test preparedatadisk role
+  hosts: all
+  roles:
+    - preparedatadisk

@@ -1,0 +1,8 @@
+---
+
+- name: Create disk of VM
+  command: virsh vol-create-as os {{ inventory_hostname }} 4g
+  args:
+    creates: /dev/os/{{ inventory_hostname }}
+  become: True
+  delegate_to: localhost

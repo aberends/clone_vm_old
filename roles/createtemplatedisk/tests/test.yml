@@ -1,0 +1,6 @@
+---
+
+- name: Test createtemplatedisk role
+  hosts: all
+  roles:
+    - role: createtemplatedisk

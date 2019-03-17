@@ -1,0 +1,12 @@
+---
+
+- name: Gather facts for localhost
+  setup:
+  delegate_to: localhost
+
+- name: Create kickstart file
+  template:
+    src: templates/domain.ks.j2
+    dest: "{{ path }}"
+  delegate_to: localhost
+

@@ -1,0 +1,6 @@
+---
+
+domain: "{{ inventory_hostname }}"
+ipv4: "192.168.122.{{ domain | regex_replace('^...0*') }}"
+path: "{{ lookup('env', 'HOME') }}/clone_vm/{{ domain }}.ks"
+timezone: Europe/Amsterdam

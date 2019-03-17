@@ -1,0 +1,26 @@
+---
+
+- name: Create root filesystem on template disk
+  block:
+  - name: Make mountpoint for root filesystem
+    file:
+      path: /tmp/root
+      state: directory
+
+  - name: Check if root LV is mounted
+    command: mountpoint -q /tmp/root
+    register: root_lv_mounted_info
+    changed_when: false
+    failed_when: false
+
+  - name: Mount root LV
+    command: mount /dev/tpl/root /tmp/root
+    args:
+      warn: false
+    when: root_lv_mounted_info.rc == 1
+
+  - name: XFS restore from data disk onto root LV
+    command: xfsrestore -f /mnt/data/rootfs /tmp/root
+    args:
+      creates: /tmp/root/root
+  become: True

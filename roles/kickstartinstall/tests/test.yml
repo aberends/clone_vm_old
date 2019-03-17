@@ -1,0 +1,7 @@
+---
+
+- name: Test kickstartinstall role
+  hosts: all
+  gather_facts: False
+  roles:
+    - role: kickstartinstall

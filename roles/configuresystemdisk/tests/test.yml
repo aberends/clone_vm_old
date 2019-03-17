@@ -1,0 +1,6 @@
+---
+
+- name: Test configuresystemdisk role
+  hosts: all
+  roles:
+    - configuresystemdisk

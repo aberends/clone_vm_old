@@ -1,0 +1,7 @@
+---
+
+- name: Test createdatadisk role
+  hosts: all
+  gather_facts: False
+  roles:
+    - role: createdatadisk

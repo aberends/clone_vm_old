@@ -1,0 +1,7 @@
+---
+
+- name: Test attachdatadisk role
+  hosts: all
+  gather_facts: False
+  roles:
+    - role: attachdatadisk

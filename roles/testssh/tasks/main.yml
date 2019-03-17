@@ -1,0 +1,10 @@
+---
+
+- name: Make sure VM has SSH connection
+  wait_for:
+    port: 22
+    host: "{{ inventory_hostname }}"
+    state: started
+    connect_timeout: 5
+    timeout: "{{ testssh_timeout_in_s }}"
+  delegate_to: localhost

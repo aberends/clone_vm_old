@@ -1,0 +1,12 @@
+---
+
+- name: Make sure VM is powered off
+  virt:
+    state: shutdown
+    name: "{{ inventory_hostname }}"
+  retries: 10
+  delay: 3
+  register: result
+  until: result.changed == false
+  become: True
+  delegate_to: localhost

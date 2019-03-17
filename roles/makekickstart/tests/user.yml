@@ -1,0 +1,39 @@
+- name: Test user variable
+  hosts: all
+  connection: local
+  gather_facts: False
+
+  tasks:
+    - name: Gather facts for localhost
+      setup:
+      delegate_to: localhost
+
+    - name: Obtain the local user's environment
+      debug:
+        msg: "{{ vars['ansible_env'] }}"
+      delegate_to: localhost
+
+    - name: Lookup HOME env variable 1
+      debug:
+        msg: "{{ lookup('env', 'HOME') }}"
+      delegate_to: localhost
+
+    - name: Lookup HOME env variable 2
+      vars:
+        home: "{{ lookup('env', 'HOME') }}"
+      debug:
+        msg: "{{ home }}"
+      delegate_to: localhost
+
+    - name: Test jinja2 interpolation
+      vars:
+        octet: "{{ inventory_hostname | regex_replace('^...0*', '') }}"
+      debug:
+        msg:
+          - "{{ octet }}"
+          - "{{ ansible_host }}"
+          - "{{ ansible_hostname }}"
+          - "{{ inventory_hostname }}"
+          - "{{ inventory_hostname_short }}"
+      delegate_to: localhost
+

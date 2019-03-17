@@ -1,0 +1,8 @@
+---
+- name: Shutdown node
+  hosts: all
+  tasks:
+    - name: Execute shutdown
+      shell: sleep 1 && poweroff
+      async: 2
+      poll: 0

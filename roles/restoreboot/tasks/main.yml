@@ -1,0 +1,21 @@
+---
+
+- name: Create boot filesystem on template disk
+  block:
+  - name: Check if boot parition is mounted
+    command: mountpoint -q /tmp/root/boot
+    register: boot_lv_mounted_info
+    changed_when: false
+    failed_when: false
+
+  - name: Mount root LV
+    command: mount /dev/vdc1 /tmp/root/boot
+    args:
+      warn: false
+    when: boot_lv_mounted_info.rc == 1
+
+  - name: XFS restore from data disk onto root LV
+    command: xfsrestore -f /mnt/data/bootfs /tmp/root/boot
+    args:
+      creates: /tmp/root/boot/grub2
+  become: True

@@ -1,0 +1,30 @@
+---
+
+- name: Ensure clean data disk is created
+  block:
+  - name: Find domain if data disk attached to VM
+    shell: virsh list --name --all | head -n -1 | while read line; do dummy=$(virsh domblklist $line | tail -n +3 | head -n -1 | grep data); [ -n "$dummy" ] && echo "$line $dummy"; done
+    register: attached_domain_info
+    failed_when: False
+    changed_when: False
+
+  - name: Detach data disk from domain
+    vars:
+      domain: "{{ attached_domain_info.stdout | regex_replace(' .*') }}"
+      volume: "{{ attached_domain_info.stdout | regex_replace('^.* +') }}"
+      disk: "{{ attached_domain_info.stdout | regex_replace('^.* +([^ ]+) +.*$', '\\1') }}"
+    command: virsh detach-disk {{ domain }} {{ volume }}
+    when: attached_domain_info.stdout != "" 
+
+  - name: Delete data disk
+    command: virsh vol-delete data os
+    args:
+      removes: /dev/os/data
+
+  - name: Create new data disk
+    command: virsh vol-create-as os data 2g
+    args:
+      creates: /dev/os/data
+
+  become: True
+  delegate_to: localhost

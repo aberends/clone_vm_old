@@ -1,9 +1,9 @@
-VIRTUALIZATION_WITH_KVM
+TINY_KVM_FOR_CLONING
 
 
 OBJECTIVE
 
-Explain how virtualization with KVM works.
+Explain how to create a tiny KVM for cloning usage.
 
 
 AUTHOR
@@ -44,6 +44,22 @@ Create with:
 - exter "ex" mode by typing ':'
 - r !sed -n 's/^\([A-Z0-9][A-Z_0-9]*\)$/- \1/p' %:p
 
+- VIRTUALIZATION_WITH_KVM
+- OBJECTIVE
+- AUTHOR
+- HISTORY
+- REFERENCES
+- ABBREVIATIONS
+- TERMS
+- SECTIONS
+- RPMS_AND_GROUPS_PREREQUISITES
+- VIRTUALIZATION_SERVICE
+- ENABLE_VIRT_MANAGER
+- DOWNLOAD_ISO
+- VIRT_INSTALL
+- SHRINK_VM_DISK
+- UNATTENDED_CONFIGURATION_WITH_ANSIBLE
+
 
 RPMS_AND_GROUPS_PREREQUISITES
 
@@ -53,7 +69,10 @@ CentOS7 host.
 
 We use the following commands:
 
+- ansible
+- ansible-playbook
 - guestfish
+- jinja2
 - virsh
 - virt-clone
 - virt-manager
@@ -143,6 +162,17 @@ group_package_types=default, mandatory, optional
 So, we install the package with a normal install:
 
 yum -y install libguestfs-tools-c
+
+In order to do some automatic configuration, we also need
+ansible:
+
+yum -y install ansible
+
+For testing of jinja2 templates (used by Ansible) on the
+command line, we install:
+
+yum -y install python2-pip
+pip install jinja2-cli
 
 
 VIRTUALIZATION_SERVICE
@@ -254,7 +284,7 @@ the user can also start virt-manager over SSH with the "-X"
 for X11 forwarding option.
 
 
-CENTOS7_TEMPLATE
+DOWNLOAD_ISO
 
 In this section we describe how to setup a CentOS7 template.
 This template is used to clone from to create a new Virtual
@@ -266,16 +296,17 @@ installation. The first step is to install a VM.
 We need the CentOS7 minimal installation ISO for this task:
 
 $
-# Go tho home directory of the user.
-cd
+# Go to clone_vm inside the home directory of the user.
+cd ~/clone_vm
 # Obtain the ISO redirect URL from CentOS for the minimal
 # install.
 URL=$(curl -s https://www.centos.org/download/ | grep -o 'http://.*-x86_64-Minimal-.*\.iso')
 # Obtain the ISO file.
 ISOFILE=$(echo $URL | sed 's#.*/##')
 # Check if the ISO is already downloaded in the home
-# directory of the user. Otherwise download it.
-[ -f "$ISOFILE" ] || wget $URL
+# directory of the user. If not, remove old ISO's and
+# download new one.
+[ -f "$ISOFILE" ] || { rm -f *-x86_64-Minimal-*.iso; wget $URL; }
 
 During the installation virt-manager shows a pop-up with the
 question: The emulator may not have search permissions for
@@ -298,43 +329,283 @@ $ printf "52:54:%2.2x:%2.2x:%2.2x:%2.2x\n" 192 168 122 3
 52:54:c0:a8:7a:03
 
 
-UNATTENDED_WITH_VIRT_INSTALL
+VIRT_INSTALL
 
 Obtain possible OS variants that can be used in KVM:
 
 # osinfo-query os | grep -i centos
 .. centos7.0 is what we use ..
 
-Prior to installation a libvirt storage volume is needed. We
-give it the name of the domain, i.e. tpl004 and the size of
-5 GiB. It is created with:
+All variables we use:
 
-# virsh vol-create-as os tpl004 5g
+OS_VARIANT="centos7.0"
+VG="os"
+DOMAIN=tpl004
+SIZE_MIB=$((5*1024))
+NET_PART="192 168 122"
+NET_NAME="default"
+OCTET="4"
+MEMORY_MIB=1024
+DESCRIPTION="CentOS7 template"
+# Assumption is that we only have 1 Minimal CentOS7 ISO.
+ISO_PATH=/home/allard/clone_vm/CentOS-7-x86_64-Minimal-*.iso
+KICKSTART_PATH=/home/allard/clone_vm/$DOMAIN.ks
+MAC=$(printf "52:54:%2.2x:%2.2x:%2.2x:%2.2x" $NET_PART $OCTET)
 
-Any remnants of a previous tpl004 VM are removed:
+Prior to installation a storage volume for the VM is needed.
+We give it the name of the domain, i.e. tpl004 and the size
+of 5 GiB. Older installations of the VM are completely
+removed:
 
 #
-virsh destroy tpl004
-virsh undefine tpl004
+virsh destroy $DOMAIN
+virsh undefine $DOMAIN
+virsh vol-delete $DOMAIN $VG
+virsh vol-create-as $VG $DOMAIN ${SIZE_MIB}m
+
+The kickstart file is:
+
+$ cat << _EOF_ > $KICKSTART_PATH
+# System authorization information
+auth --enableshadow --passalgo=sha512
+# Use CDROM installation media
+cdrom
+# Add CentOS7 base repo. Note, the variables can be
+# discovered by using the following command on a running
+# CentOS7 system:
+# yum --setopt=ui_repoid_vars=id,releasever,basearch,infra repolist
+#repo --name=base --mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=os&infra=\$infra
+repo --name=base --mirrorlist=http://mirrorlist.centos.org/?release=7&arch=x86_64&repo=os&infra=stock
+# Use text install.
+text
+# Don't run the Setup Agent on first boot.
+firstboot --disable
+ignoredisk --only-use=vda
+# Keyboard layouts
+keyboard --vckeymap=us --xlayouts='us'
+# System language
+lang en_US.UTF-8
+
+# Network information
+network --bootproto=static --device=eth0 --gateway=192.168.122.1 --ip=192.168.122.$OCTET --nameserver=8.8.4.4,8.8.8.8 --netmask=255.255.255.0 --ipv6=auto --activate
+network --hostname=$DOMAIN.home.org
+
+# Root password
+rootpw --iscrypted \$6\$VqpnR1p7fX77VP1I\$y2bB8RshiFXMAgzHed4RIaZUR1ny8GnXGCCw8uHRItsvx/xsnqsx0X/YMwIuRfKKmBQ5FCeTUkP9mnXDzri9u1
+# System services
+services --enabled="chronyd"
+# System timezone
+timezone Europe/Amsterdam --isUtc --nontp
+# System bootloader configuration.
+zerombr
+bootloader --append=" crashkernel=auto" --location=mbr --boot-drive=vda
+# Partition clearing information
+clearpart --drives=vda --all --initlabel
+# Disk partitioning information
+# AB: set the boot partition to a fixed size. 512 MiB is
+# more than enough for initial CentOS7 installations.
+part /boot --fstype="xfs" --ondisk=vda --size=512
+# AB: the remainder of the disk is dedicated to the os VG.
+part pv.157 --fstype="lvmpv" --ondisk=vda --size=1 --grow
+volgroup $VG --pesize=4096 pv.157
+logvol swap --fstype="swap" --size=511 --name=swap --vgname=$VG
+# AB: the remainder of the VG is dedicated to the root
+# filesystem.
+logvol / --fstype="xfs" --size=1 --grow --name=root --vgname=$VG
+# AB: poweroff the system to give us a change to
+# persistently remove the CDROM.
+poweroff
+
+# AB: the minimum packages specification (@^minimal, @core
+# and kexec-tools) is enlarged with packages we always need.
+%packages
+@^minimal
+@core
+kexec-tools
+bash-completion
+mlocate
+tcpdump
+telnet
+tree
+vim-enhanced
+wget
+xfsdump
+yum-utils
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+%end
+
+%post --log=/root/ks-post.log
+echo post log test
+%end
+
+%anaconda
+pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
+pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+%end
+_EOF_
 
 Information is given in virt-install(1). The options are in
 the order of virt-install(1).
 
 virt-install \
   --connect qemu:///system \
-  --name=tpl004 \
-  --memory=1024 \
+  --name=$DOMAIN \
+  --memory=$MEMORY_MIB \
   --arch=x86_64 \
-  --metadata=description="CentOS7 template" \
+  --metadata=description="$DESCRIPTION" \
   --vcpus=vcpus=1 \
-  --location=/home/allard/CentOS-7-x86_64-Minimal-1810.iso \
-  --extra-args="ks=file:/tpl004.ks console=ttyS0,115200" \
-  --initrd-inject=/home/allard/tpl004.ks \
-  --os-variant=centos7.0 \
-  --boot=hd,cdrom \
-  --disk=vol=os/tpl004,device=disk,bus=virtio \
-  --network=network=default,mac=52:54:c0:a8:7a:04 \
+  --location=$ISO_PATH \
+  --extra-args="ks=file:/$DOMAIN.ks console=ttyS0,115200 inst.sshd" \
+  --initrd-inject=$KICKSTART_PATH \
+  --os-variant="$OS_VARIANT" \
+  --boot=hd \
+  --disk=vol=os/$DOMAIN,device=disk,bus=virtio \
+  --network=network=$NET_NAME,mac=$MAC \
   --graphics=none \
+  --noautoconsole \
   --hvm \
   --autostart
 
+Note, the option "--noautoconsole" tells virt-install not to
+connect to the console. This way we stay disconnected from
+the VM.
+
+In the option "--extra-args" we specify "inst.sshd" to
+enable an sshd during installation. You can connect to it as
+root without password using the IPv4 address configured in
+the kickstart file.
+
+We need to wait until the installation is finished. We can
+detect the completion of the installation with the command:
+
+# watch -n 1 "virsh domstate $DOMAIN"
+.. "running" during installation ..
+.. "shut off" after installation ..
+
+After the installation we want to remove the CDROM drive. To
+accomplish this, we use:
+
+# virt-xml $DOMAIN --remove-device --disk device=cdrom
+Domain 'tpl004' defined successfully.
+
+The "--autostart" start option was used. But for some reason
+it does not mark the VM for autostart. When we don't use the
+option "--noautoconsole" the option "--autostart" does work.
+Anyway, we need to set it to autostart again:
+
+# virsh autostart $DOMAIN
+
+To start the VM:
+
+# virsh start $DOMAIN
+
+
+SHRINK_VM_DISK
+
+What if we create the disk for the VM via lvcreate?
+
+We do a test:
+
+# lvcreate -n tst001 os -L 5g
+  Logical volume "tst001" created.
+
+# lvs os/tst001
+  LV     VG Attr       LSize Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  tst001 os -wi-a----- 5.00g
+
+# virsh vol-list os
+.. no tst001 in the output ..
+
+So, we need to create the disk via "virsh vol-create-as".
+
+Next, we create a data disk on the host and attach it to the
+VM:
+
+#
+# AB: note 2GiB (2g) is assumed to be more than enough to
+# contain the XFS dumps.
+virsh vol-delete data $VG
+virsh vol-create-as $VG data 2g
+virsh attach-disk $DOMAIN /dev/$VG/data vdb
+
+Log in on the VM:
+
+# ssh -l root 192.168.122.4
+
+Create filesystem, mount it and dump the other filesystems
+on it:
+
+#
+mkfs.xfs -f /dev/vdb
+mkdir /mnt/data
+mount /dev/vdb /mnt/data
+xfsdump -L '' -M '' -f /mnt/data/rootfs /
+xfsdump -L '' -M '' -f /mnt/data/bootfs /boot
+
+Calculate the sizes expressed in MiB (--block-size=1M)
+
+#
+BOOTSIZE=$(ls -l --block-size=1M /mnt/data/bootfs | awk '{ print $5 }')
+ROOTSIZE=$(ls -l --block-size=1M /mnt/data/rootfs | awk '{ print $5 }')
+SIZE=$(( $BOOTSIZE + 20 + $ROOTSIZE + 100 ))
+
+How to figure out to what VM a previous tpl LV is attached?
+
+#
+TPL_ATTACHED=$(virsh list --name --all | head -n -1 | while read line; do dummy=$(virsh domblklist $line | tail -n +3 | head -n -1 | grep tpl); [ -n "$dummy" ] && echo "$line $dummy"; done)
+[ -n "$TPL_ATTACHED" ] && virsh detach-disk ${TPL_ATTACHED%% *} ${TPL_ATTACHED##* }
+
+On the host create a new disk of the calculated size:
+
+# virsh vol-create-as $VG tpl ${SIZE}M
+
+Attach the new (small) disk to the VM:
+
+# virsh attach-disk $DOMAIN /dev/os/tpl vdc
+
+Log in, partition the new disk and put filesystems on the
+partitions:
+
+#
+parted -s /dev/vdc "unit MiB mklabel msdos mkpart primary 0% ${BOOTSIZE}MiB set 1 boot on mkpart primary ${BOOTSIZE}MiB 100%"
+mkfs.xfs -f /dev/vdc1
+pvcreate --yes -ff /dev/vdc2
+vgcreate tpl /dev/vdc2
+lvcreate --yes -n swap -l 2 tpl
+lvcreate --yes -n root -l 100%VG tpl
+mkfs.xfs -f /dev/tpl/root
+
+Now, mount the new filesystems and restore the original boot
+and root filesystems on them:
+
+#
+mkdir /tmp/{boot,root}
+mount /dev/tpl/root /tmp/root
+xfsrestore -f /mnt/data/rootfs /tmp/root
+mount /dev/vdc1 /tmp/root/boot
+xfsrestore -f /mnt/data/bootfs /tmp/root/boot
+mount --bind /dev /tmp/root/dev
+mount --bind /dev/pts /tmp/root/dev/pts
+mount --bind /proc /tmp/root/proc
+mount --bind /sys /tmp/root/sys
+chroot /tmp/root
+
+Correct information to make the shrunk disk boot:
+
+#
+sed -i -e 's#=[^ ]*/root#=tpl/root#' \
+       -e 's#=[^ ]*/swap#=tpl/swap#' /etc/default/grub
+grub2-install /dev/vdc
+grub2-mkconfig > /boot/grub2/grub.cfg
+BOOT_UUID=$(blkid /dev/vdc1 -o value -s UUID)
+sed -i -e "s/UUID=[^ ]\+ /UUID=$BOOT_UUID /" \
+       -e 's#/[^-/]\+-root#/tpl-root#' \
+       -e 's#/[^-/]\+-swap#/tpl-swap#' /etc/fstab
+#sed -i -e 's/^orig7.home.org/tpl7.home.org/' /tmp/root/etc/hostname
+mkswap /dev/tpl/swap
+
+
+UNATTENDED_CONFIGURATION_WITH_ANSIBLE

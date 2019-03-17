@@ -1,0 +1,6 @@
+---
+
+- name: Test dumppartitions role
+  hosts: all
+  roles:
+    - dumppartitions

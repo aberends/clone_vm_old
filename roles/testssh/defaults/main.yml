@@ -1,0 +1,7 @@
+# AB: The default value of 20s is calibrated on the time a
+# small VM needs to start up and start the sshd service. If
+# you have a different situation, e.g. SELinux relabel, then
+# adapt this value accordingly. For a relabel action:
+# 2 * 20s + 10s = 50s. Relabeling reboots the VM. The
+# relabel action itself consts 10s.
+testssh_timeout_in_s: 20

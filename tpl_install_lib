@@ -1,0 +1,477 @@
+#
+# SCRIPT
+#   tpl_install_lib
+# DESCRIPTION
+# ARGUMENTS
+#   None.
+# RETURN
+#   0: success.
+# DEPENDENCIES
+# FAILURE
+# AUTHORS
+#   Date strings made with 'date +"\%Y-\%m-\%d \%H:\%M"'.
+#   Allard Berends (AB), 2019-02-15 14:39
+# HISTORY
+# LICENSE
+#   Copyright (C) 2019 Allard Berends
+#
+#   tpl_install_lib is free software; you can redistribute
+#   it and/or modify it under the terms of the GNU General
+#   Public License as published by the Free Software
+#   Foundation; either version 3 of the License, or (at your
+#   option) any later version.
+#
+#   tpl_install_lib is distributed in the hope that it will
+#   be useful, but WITHOUT ANY WARRANTY; without even the
+#   implied warranty of MERCHANTABILITY or FITNESS FOR A
+#   PARTICULAR PURPOSE. See the GNU General Public License
+#   for more details.
+#
+#   You should have received a copy of the GNU General
+#   Public License along with this program; if not, write to
+#   the Free Software Foundation, Inc., 59 Temple Place -
+#   Suite 330, Boston, MA 02111-1307, USA.
+# DESIGN
+#
+
+#
+# FUNCTION
+#   download_iso
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+download_iso() {
+  # AB: the ISO is downloaded into the directory where this
+  # script is located.
+  cd $DNAME
+  URL=$(curl -s https://www.centos.org/download/ | grep -o 'http://.*-x86_64-Minimal-.*\.iso')
+  ISO_FILENAME=$(echo $URL | sed 's#.*/##')
+  [ -f "$ISO_FILENAME" ] || { rm -f *-x86_64-Minimal-*.iso; wget $URL; }
+  ISO_FILE="$(ls $DNAME/CentOS-7-x86_64-Minimal-*.iso)"
+} # end download_iso
+
+#
+# FUNCTION
+#   cleanup_old_installation
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+cleanup_old_installation() {
+  # Remove old remnants of former installation.
+  virsh destroy $D_OPTION
+  virsh undefine $D_OPTION
+  virsh vol-delete $D_OPTION $P_OPTION
+  virsh vol-create-as $P_OPTION $D_OPTION 4g
+} # end cleanup_old_installation
+
+#
+# FUNCTION
+#   make_kickstart
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+make_kickstart() {
+  # AB: the purpose of the TZ statement is to figure out the
+  # timezone of the host, e.g. Europe/Amsterdam.
+  TZ=$(find /etc/localtime -maxdepth 0 -printf '%l' | awk -F/ '{print $(NF-1)"/"$(NF)}')
+  cat << _EOF_ > $DNAME/$D_OPTION.ks
+# System authorization information
+auth --enableshadow --passalgo=sha512
+# Use CDROM installation media
+cdrom
+# Add CentOS7 base repo. Note, the variables can be
+# discovered by using the following command on a running
+# CentOS7 system:
+# yum --setopt=ui_repoid_vars=id,releasever,basearch,infra repolist
+#repo --name=base --mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=os&infra=\$infra
+repo --name=base --mirrorlist=http://mirrorlist.centos.org/?release=7&arch=x86_64&repo=os&infra=stock
+# Use text install.
+text
+# Don't run the Setup Agent on first boot.
+firstboot --disable
+ignoredisk --only-use=vda
+# Keyboard layouts
+keyboard --vckeymap=us --xlayouts='us'
+# System language
+lang en_US.UTF-8
+
+# Network information
+network --bootproto=static --device=eth0 --gateway=192.168.122.1 --ip=$IPV4 --nameserver=8.8.4.4,8.8.8.8 --netmask=255.255.255.0 --ipv6=auto --activate
+network --hostname=$D_OPTION.home.org
+
+# Root password
+rootpw --iscrypted \$6\$VqpnR1p7fX77VP1I\$y2bB8RshiFXMAgzHed4RIaZUR1ny8GnXGCCw8uHRItsvx/xsnqsx0X/YMwIuRfKKmBQ5FCeTUkP9mnXDzri9u1
+# System services
+services --enabled="chronyd"
+# System timezone
+timezone $TZ --isUtc --nontp
+# System bootloader configuration.
+zerombr
+bootloader --append=" crashkernel=auto" --location=mbr --boot-drive=vda
+# Partition clearing information
+clearpart --drives=vda --all --initlabel
+# Disk partitioning information
+part /boot --fstype="xfs" --ondisk=vda --size=512
+part pv.157 --fstype="lvmpv" --ondisk=vda --size=1 --grow
+volgroup os --pesize=4096 pv.157
+logvol swap --fstype="swap" --size=511 --name=swap --vgname=os
+logvol / --fstype="xfs" --size=1 --grow --name=root --vgname=os
+# Poweroff the system to give us a change to persistently
+# remove the CDROM.
+poweroff
+
+%packages
+@^minimal
+@core
+kexec-tools
+bash-completion
+mlocate
+tcpdump
+telnet
+tree
+vim-enhanced
+wget
+xfsdump
+yum-utils
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+%end
+
+%post --log=/root/ks-post.log
+echo post log test
+%end
+
+%anaconda
+pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
+pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+%end
+_EOF_
+} # end make_kickstart
+
+#
+# FUNCTION
+#   install_via_kickstart
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+install_via_kickstart() {
+  virt-install \
+    --connect qemu:///system \
+    --name=$D_OPTION \
+    --memory=1024 \
+    --arch=x86_64 \
+    --metadata=description="$O_OPTION template" \
+    --vcpus=vcpus=1 \
+    --location="$ISO_FILE" \
+    --extra-args="ks=file:/$D_OPTION.ks console=ttyS0,115200 inst.sshd" \
+    --initrd-inject="$DNAME/$D_OPTION.ks" \
+    --os-variant="$O_OPTION" \
+    --boot=hd \
+    --disk=vol=os/$D_OPTION,device=disk,bus=virtio \
+    --network=network=default,mac=$MAC \
+    --graphics=none \
+    --noautoconsole \
+    --hvm \
+    --autostart
+
+  [ $? -ne 0 ] && { echo "FATAL: exit"; exit 1; }
+  echo "Sleep for 120s"
+  sleep 120
+} # end install_via_kickstart
+
+#
+# FUNCTION
+#   wait_for_shut_off
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+wait_for_shut_off() {
+  echo -n "Checking every 5 seconds if $D_OPTION is shut off: "
+  while [ "$(virsh domstate $D_OPTION)" != "shut off" ]
+  do
+    sleep 5
+    echo -n '.'
+  done
+} # end wait_for_shut_off
+
+#
+# FUNCTION
+#   wait_for_vm_ssh
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+wait_for_vm_ssh() {
+  ansible --user=root --inventory=localhost, localhost --extra-vars="ansible_ssh_pass=redhat" --module-name wait_for --args "host=$IPV4 port=22 timeout=60"
+} # end wait_for_vm_ssh
+
+#
+# FUNCTION
+#   handle_ssh_key
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+handle_ssh_key() {
+  # Make sure we have an SSH keypair on the host system for
+  # user root.
+  [[ -f ~/.ssh/id_rsa && -f ~/.ssh/id_rsa.pub ]] || { rm -f ~/.ssh/id_rsa*; ssh-keygen -f ~/.ssh/id_rsa -N ''; }
+
+  # Make sure that older versions of the target host key are
+  # removed.
+  ssh-keygen -R $IPV4
+
+  # Copy the SSH public key onto the target machine using
+  # Ansible.
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name authorized_key --args "user=root state=present key={{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+} # end handle_ssh_key
+
+#
+# FUNCTION
+#   create_dump_disk
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+create_dump_disk() {
+  DATA_ATTACHED=$(virsh list --name --all | head -n -1 | while read line; do dummy=$(virsh domblklist $line | tail -n +3 | head -n -1 | grep data); [ -n "$dummy" ] && echo "$line $dummy"; done)
+  [ -n "$DATA_ATTACHED" ] && virsh detach-disk ${DATA_ATTACHED%% *} ${DATA_ATTACHED##* }
+  virsh vol-delete data $P_OPTION
+  virsh vol-create-as $P_OPTION data 2g
+} # end create_dump_disk
+
+#
+# FUNCTION
+#   attach_dump_disk
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+attach_dump_disk() {
+  virsh attach-disk $D_OPTION /dev/$P_OPTION/data vdb
+} # end attach_dump_disk
+
+#
+# FUNCTION
+#   partition_dump_disk
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+partition_dump_disk() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name parted --args "device=/dev/vdb label=msdos part_start=0% part_end=100% number=1 state=present unit=MiB"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name filesystem --args "dev=/dev/vdb1 fstype=xfs force=yes"
+} # end partition_dump_disk
+
+#
+# FUNCTION
+#   mount_dump_disk
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+mount_dump_disk() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name file --args "path=/mnt/data state=directory"
+  # Note, the mount module does not help us since it alters
+  # /etc/fstab. We just want to temporarily mount the
+  # filesystem.
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "mount /dev/vdb1 /mnt/data warn=False"
+} # end mount_dump_disk
+
+#
+# FUNCTION
+#   dump_on_disk
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+dump_on_disk() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "xfsdump -L '' -M '' -f /mnt/data/rootfs /"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "xfsdump -L '' -M '' -f /mnt/data/bootfs /boot"
+} # end dump_on_disk
+
+#
+# FUNCTION
+#   create_tpl_disk
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+create_tpl_disk() {
+  # Calculate sizes and create template disk.
+  ROOTSIZE=$(ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name shell --args "ls -l --block-size=1M /mnt/data/rootfs | awk '{ print \$5 }'" -o | awk '{print $NF}')
+  ROOTSIZE=$(( $ROOTSIZE + 100 ))
+  BOOTSIZE=$(ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name shell --args "ls -l --block-size=1M /mnt/data/bootfs | awk '{ print \$5 }'" -o | awk '{print $NF}')
+  BOOTSIZE=$(( $BOOTSIZE + 20 ))
+  SIZE=$(( $BOOTSIZE + $ROOTSIZE ))
+  TPL_ATTACHED=$(virsh list --name --all | head -n -1 | while read line; do dummy=$(virsh domblklist $line | tail -n +3 | head -n -1 | grep tpl); [ -n "$dummy" ] && echo "$line $dummy"; done)
+  [ -n "$TPL_ATTACHED" ] && virsh detach-disk ${TPL_ATTACHED%% *} ${TPL_ATTACHED##* }
+  virsh vol-delete tpl $P_OPTION
+  virsh vol-create-as $P_OPTION tpl ${SIZE}M
+} # end create_tpl_disk
+
+#
+# FUNCTION
+#   attach_tpl_disk
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+attach_tpl_disk() {
+  virsh attach-disk $D_OPTION /dev/$P_OPTION/tpl vdc
+} # end attach_tpl_disk
+
+#
+# FUNCTION
+#   partition_tpl_disk
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+partition_tpl_disk() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name parted --args "device=/dev/vdc label=msdos part_start=0% part_end=${BOOTSIZE}MiB number=1 state=present unit=MiB"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name parted --args "device=/dev/vdc part_start=${BOOTSIZE}MiB part_end=100% number=2 state=present unit=MiB"
+
+  # Create filesystems and restore XFS dumps.
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name filesystem --args "dev=/dev/vdc1 fstype=xfs force=yes"
+  # AB: first remove the VG because otherwise old LV's are
+  # activated upon VG creation.
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name lvg --args "vg=tpl pvs=/dev/vdc2 force=yes state=absent"
+  # AB: creation of the VG should give us a VG with 100% free
+  # extents.
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name lvg --args "vg=tpl pvs=/dev/vdc2 force=yes"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name lvol --args "vg=tpl lv=swap size=1 force=yes"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name lvol --args "vg=tpl lv=root size=100%FREE force=yes"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name filesystem --args "dev=/dev/tpl/root fstype=xfs"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name file --args "path=/tmp/root state=directory"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "mkswap /dev/tpl/swap"
+} # end partition_tpl_disk
+
+#
+# FUNCTION
+#   mount_root
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+mount_root() {
+  # Note, the mount module does not help us since it alters
+  # /etc/fstab. We just want to temporarily mount the
+  # filesystem.
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "mount /dev/tpl/root /tmp/root warn=False"
+} # end mount_root
+
+#
+# FUNCTION
+#   restore_root
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+restore_root() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "xfsrestore -f /mnt/data/rootfs /tmp/root"
+} # end restore_root
+
+#
+# FUNCTION
+#   mount_boot
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+mount_boot() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "mount /dev/vdc1 /tmp/root/boot warn=False"
+} # end mount_boot
+
+#
+# FUNCTION
+#   restore_boot
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+restore_boot() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "xfsrestore -f /mnt/data/bootfs /tmp/root/boot"
+} # end restore_boot
+
+#
+# FUNCTION
+#   make_bind_mounts
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+make_bind_mounts() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "mount --bind /dev /tmp/root/dev warn=False"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "mount --bind /dev/pts /tmp/root/dev/pts warn=False"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "mount --bind /proc /tmp/root/proc warn=False"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "mount --bind /sys /tmp/root/sys warn=False"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name command --args "mount --bind /run /tmp/root/run warn=False"
+} # end make_bind_mounts
+
+#
+# FUNCTION
+#   make_grub_config
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+make_grub_config() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name shell --args "chroot /tmp/root sed -i -e 's#=[^ ]*/root#=tpl/root#' -e 's#=[^ ]*/swap#=tpl/swap#' /etc/default/grub; chroot /tmp/root sync"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name shell --args "chroot /tmp/root grub2-install /dev/vdc; chroot /tmp/root sync"
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name shell --args "chroot /tmp/root sh -c 'grub2-mkconfig > /boot/grub2/grub.cfg'; chroot /tmp/root sync"
+} # end make_grub_config
+
+#
+# FUNCTION
+#   update_fstab
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+update_fstab() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name shell --args "chroot /tmp/root sed -i -e "'"'"s/UUID=[^ ]\+ /UUID=\$(blkid /dev/vdc1 -o value -s UUID) /"'"'" -e 's#/[^-/]\+-root#/tpl-root#' -e 's#/[^-/]\+-swap#/tpl-swap#' /etc/fstab; chroot /tmp/root sync"
+} # end update_fstab
+
+#
+# FUNCTION
+#   autorelabel
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+autorelabel() {
+  ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name shell --args "chroot /tmp/root touch /.autorelabel"
+} # end autorelabel
+
+#
+# FUNCTION
+#   poweroff_vm
+# DESCRIPTION
+# EXIT CODE
+#   2: error
+#
+poweroff_vm() {
+  #ansible --user=root --inventory=$IPV4, $IPV4 --extra-vars="ansible_ssh_pass=redhat" --module-name shell --args "async=1 poll=0 ignore_errors=True sleep 2 && poweroff"
+  ansible-playbook --user=root --inventory=$IPV4, --limit=$IPV4 --extra-vars="ansible_ssh_pass=redhat" $DNAME/poweroff.yml
+} # end poweroff_vm
+
+if [ "$TEST_TPL_INSTALL_LIB" == "yes" ]; then
+  set -o xtrace
+  DNAME=$(dirname $BASH_SOURCE)
+  D_OPTION=clt231
+  O_OPTION=centos7.0
+  P_OPTION=os
+  MAC=52:54:c0:a8:7a:e7
+  IPV4=192.168.122.231
+  export ANSIBLE_HOST_KEY_CHECKING=False
+  ISO_FILE="$(ls $DNAME/CentOS-7-x86_64-Minimal-*.iso)"
+  set +o xtrace
+fi

@@ -1,0 +1,43 @@
+---
+
+- block:
+  - name: Obtain path of Minimal ISO
+    shell: ls -1 ~/clone_vm/CentOS-7-x86_64-Minimal-*.iso | tail -n 1
+    register: iso_path_info
+    changed_when: false
+
+  - name: Calculate MAC address
+    vars:
+      domain: "{{ inventory_hostname }}"
+      octet: "{{ domain | regex_replace('^...0*') }}"
+    command: printf "52:54:%2.2x:%2.2x:%2.2x:%2.2x" 192 168 122 {{ octet }}
+    register: mac_info
+    changed_when: false
+
+  - name: Install VM with kickstart file
+    vars:
+      domain: "{{ inventory_hostname }}"
+      home: "{{ lookup('env', 'HOME') }}"
+      iso_path: "{{ iso_path_info.stdout }}"
+      mac: "{{ mac_info.stdout }}"
+    command: >
+      virt-install
+        --connect qemu:///system
+        --name={{ domain }}
+        --memory=1024
+        --arch=x86_64
+        --metadata=description="centos7.0 template"
+        --vcpus=vcpus=1
+        --location="{{ iso_path }}"
+        --extra-args="ks=file:/{{ domain }}.ks console=ttyS0,115200 inst.sshd"
+        --initrd-inject="{{ home }}/clone_vm/{{ domain }}.ks"
+        --os-variant="centos7.0"
+        --boot=hd
+        --disk=vol=os/{{ domain }},device=disk,bus=virtio
+        --network=network=default,mac={{ mac }}
+        --graphics=none
+        --noautoconsole
+        --hvm
+        --autostart
+    become: True
+  delegate_to: localhost

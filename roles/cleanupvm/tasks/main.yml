@@ -1,0 +1,24 @@
+---
+
+- name: Remove VM and its disk
+  block:
+
+  - name: Make sure VM is destroyed
+    virt:
+      state: destroyed
+      name: "{{ inventory_hostname }}"
+    failed_when: False
+
+  - name: Make sure VM is undefined
+    virt:
+      command: undefine
+      name: "{{ inventory_hostname }}"
+    failed_when: False
+
+  - name: Remove disk of VM
+    command: virsh vol-delete {{ inventory_hostname }} os
+    args:
+      removes: /dev/os/{{ inventory_hostname }}
+
+  become: True
+  delegate_to: localhost

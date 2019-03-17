@@ -1,0 +1,40 @@
+- name: Create CentOS 7 VM
+  hosts: puc052
+  vars:
+    isochanged_skip: true
+  gather_facts: false
+  roles:
+  - downloadiso
+  - isochanged
+  - cleanupvm
+  - makevolume
+  - makekickstart
+  - kickstartinstall
+  - waitshutoff
+  - removecdrom
+  - poweron
+  - testssh
+  - pubkeylogin
+  - createdatadisk
+  - attachdatadisk
+  - preparedatadisk
+  - mountdatadisk
+  - dumppartitions
+  - createtemplatedisk
+  - attachtemplatedisk
+    # AB: preparetemplatedisk depends on registered
+    # variables of createtemplatedisk.
+  - preparetemplatedisk
+  - restoreroot
+  - restoreboot
+  - makebindmounts
+  - configuresystemdisk
+  - poweroff
+  - waitshutoff
+  - setsystemdisk
+  - poweron
+  - role: testssh
+    vars:
+      testssh_timeout_in_s: 50
+  - poweroff
+  - waitshutoff

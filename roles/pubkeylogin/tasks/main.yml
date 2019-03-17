@@ -1,0 +1,54 @@
+---
+# Starting from Ansible 2.8 a module openssh_keypair will
+# exist. More information at
+# https://docs.ansible.com/ansible/devel/modules/openssh_keypair_module.html
+# For now we generate our key pair with a command.
+
+- name: Deal with SSH keys on localhost
+  block:
+  - name: Make sure SSH keypair exists
+    command: ssh-keygen -f ~/.ssh/id_rsa -N ''
+    args:
+      creates: ~/.ssh/id_rsa
+
+    # AB: we keep it simple here and just remove the host keys
+    # that match the inventory hostname. If facts are gathered
+    # we can also remove ansible_fqdn and
+    # ansible_default_ipv4['address'].
+    # TODO: figure out if we really do not need this task. If
+    # it is not needed, remove the commented out variant.
+  #- name: Remove old host key from known_hosts file
+  #  known_hosts:
+  #    name: "{{ inventory_hostname }}"
+  #    state: absent
+  #  delegate_to: localhost
+
+  - name: Figure out if IPv4 based host key is present
+    command: awk "/{{ inventory_hostname }}/ {print $1}" /etc/hosts
+    register: ipv4_host_key_info
+    changed_when: false
+
+  - name: Remove IPv4 based host key from known_hosts file
+    known_hosts:
+      name: "{{ ipv4_host_key_info.stdout }}"
+      state: absent
+
+  - name: Obtain new host key
+    shell: ssh-keyscan -t ecdsa {{ inventory_hostname }}
+    register: host_key_info
+    changed_when: false
+
+  - name: Add new host key to known_hosts file
+    known_hosts:
+      name: "{{ inventory_hostname }}"
+      state: present
+      key: "{{ host_key_info.stdout }}"
+  delegate_to: localhost
+
+- name: Enable pubkey login
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+  async: 3
+  poll: 1

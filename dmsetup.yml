@@ -1,0 +1,11 @@
+- name: test dmsetup
+  hosts: puc052
+  tasks:
+  - name: test
+    shell: dmsetup ls | awk '/^tpl-/ {print $1}'
+    register: dm_maps_info
+    changed_when: false
+
+  - name: remove
+    command: dmsetup remove {{ item }}
+    loop: "{{ dm_maps_info.stdout_lines }}"

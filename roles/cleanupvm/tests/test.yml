@@ -1,0 +1,7 @@
+---
+
+- name: Test cleanupvm role
+  hosts: all
+  gather_facts: False
+  roles:
+    - role: cleanupvm

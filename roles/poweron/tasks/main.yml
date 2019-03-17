@@ -1,0 +1,8 @@
+---
+
+- name: Make sure VM is powered on
+  virt:
+    state: running
+    name: "{{ inventory_hostname }}"
+  become: True
+  delegate_to: localhost

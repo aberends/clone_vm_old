@@ -1,0 +1,10 @@
+---
+
+- name: Wait until VM is powered off
+  command: virsh domstate {{ inventory_hostname }}
+  retries: 100
+  delay: 3
+  register: result
+  until: result.stdout == "shut off"
+  become: True
+  delegate_to: localhost

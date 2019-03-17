@@ -1,0 +1,7 @@
+---
+
+- name: Test poweron role
+  hosts: all
+  gather_facts: False
+  roles:
+    - role: poweron

@@ -1,0 +1,134 @@
+---
+
+- name: Prepare template disk
+  vars:
+    bpart_size_mib: "{{ preparetemplatedisk_boot_size_mib }}"
+  block:
+
+  - name: Obtain information about current partitions
+    parted:
+      device: /dev/vdc
+      unit: MiB
+    register: partitions_info
+
+  - name: Show information about current partitions
+    debug:
+      msg:
+      - "{{ partitions_info }}"
+      - "boot partition size to set: {{ bpart_size_mib }}MiB"
+
+  - name: Deactivate tpl VG and remove partitions
+    block:
+    - name: Deactivate tpl VG
+      command: vgchange -an tpl
+      register: result
+      failed_when: result.rc != 0 and result.rc != 5
+      changed_when: result.rc == 0
+
+    - name: Remove VG on LVM partition
+      lvg:
+        vg: tpl
+        pvs: /dev/vdc2
+        force: yes
+        state: absent
+
+    - name: Remove PV
+      command: pvremove -f -y /dev/vdc2
+      register: result
+      failed_when: result.rc != 0 and result.rc != 5
+      changed_when: result.rc == 0
+
+    - name: Remove existing partitions
+      parted:
+        device: /dev/vdc
+        number: "{{ item.num }}"
+        state: absent
+      loop: "{{ partitions_info.partitions }}"
+    when: partitions_info.partitions|length > 2 or
+          partitions_info.partitions|length == 1 or
+          (partitions_info.partitions|length == 2 and
+           partitions_info.partitions.0.end|int != bpart_size_mib|int) or
+          (partitions_info.partitions|length == 2 and
+           partitions_info.partitions.1.end|int != partitions_info.disk.size|int)
+
+  - name: Create boot partition on the given disk
+    parted:
+      device: /dev/vdc
+      label: msdos
+      number: 1
+      part_start: 0%
+      part_end: "{{ bpart_size_mib }}MiB"
+      state: present
+
+  - name: Create LVM partition on the given disk
+    parted:
+      device: /dev/vdc
+      label: msdos
+      number: 2
+      part_start: "{{ bpart_size_mib }}MiB"
+      part_end: 100%
+      state: present
+
+  - name: Create XFS filesystem on boot partition
+    filesystem:
+      dev: /dev/vdc1
+      fstype: xfs
+      # AB: force is needed. Otherwise old XFS structures
+      # remain, leading to unexpected results.
+      force: true
+
+  - name: Ensure that former LVM data is removed
+    command: wipefs --all --force /dev/vdc2
+
+  - name: Get old device mapper maps
+    shell: dmsetup ls | awk '/^tpl-/ {print $1}'
+    register: dm_maps_info
+    changed_when: false
+
+  - name: Remove old device mapper maps
+    command: dmsetup remove {{ item }}
+    loop: "{{ dm_maps_info.stdout_lines }}"
+
+  - name: Create VG on LVM partition
+    lvg:
+      vg: tpl
+      pvs: /dev/vdc2
+
+    # AB: we use 4 194 304 bytes == 4MiB == 4m, which is the
+    # size of one physical extend, the minimum.
+  - name: Create swap LV
+    lvol:
+      vg: tpl
+      lv: swap
+      size: 4m
+
+    # AB: we need to calculate the size of the root LV
+    # ourselves. Setting 100%FREE does not work for
+    # idempotentness. The second run 0% is free.
+  - name: Get size of VG
+    shell: vgs -o vg_size tpl --units 1b --noheadings | grep -o '[0-9]\+'
+    register: vg_size_info
+    changed_when: false
+
+  - name: Get size of swap LV
+    shell: lvs -o lv_size tpl/swap --units 1b --noheadings | grep -o '[0-9]\+'
+    register: lv_swap_size_info
+    changed_when: false
+
+  - name: Create root LV
+    lvol:
+      vg: tpl
+      lv: root
+      size: "{{ vg_size_info.stdout|int - lv_swap_size_info.stdout|int }}b"
+
+  - name: Create XFS filesystem on root LV
+    filesystem:
+      dev: /dev/tpl/root
+      fstype: xfs
+
+    # AB: we always make the swap area because it is
+    # small and does not do any harm.
+  - name: Make swap on swap LV
+    command: mkswap /dev/tpl/swap
+
+  become: True

@@ -1,0 +1,7 @@
+---
+
+- name: Test testssh role
+  hosts: all
+  gather_facts: False
+  roles:
+    - role: testssh

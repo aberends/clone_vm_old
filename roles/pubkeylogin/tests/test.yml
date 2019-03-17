@@ -1,0 +1,7 @@
+---
+
+- name: Test pubkeylogin role
+  hosts: all
+  gather_facts: False
+  roles:
+    - role: pubkeylogin

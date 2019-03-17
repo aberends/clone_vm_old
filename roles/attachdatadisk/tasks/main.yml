@@ -1,0 +1,17 @@
+---
+
+- name: Attach data disk to domain if not attached
+  block:
+
+  - name: Verify if data disk is attached to domain
+    shell: virsh domblklist {{ inventory_hostname }} | grep /dev/os/data
+    register: block_list_info
+    changed_when: False
+    failed_when: False
+
+  - name: Attach data disk to domain
+    command: virsh attach-disk {{ inventory_hostname }} /dev/os/data vdb
+    when: block_list_info.stdout == ""
+
+  become: True
+  delegate_to: localhost

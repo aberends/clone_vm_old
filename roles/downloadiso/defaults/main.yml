@@ -1,0 +1,10 @@
+---
+
+# AB: don't remove the trailing '/'. If you do an HTTP 301
+# (redirection) page is returned with the URL that ends with
+# the trailing '/'.
+downloadiso_centos7_url: https://www.centos.org/download/
+
+# AB: the pattern is consumed by "grep -o". So it must match
+# a complete URL.
+downloadiso_url_pattern: 'http://.*-x86_64-Minimal-.*\.iso'

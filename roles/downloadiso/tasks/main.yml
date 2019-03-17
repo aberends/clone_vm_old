@@ -1,0 +1,34 @@
+---
+
+- name: Download new CentOS7 ISO and remove old ones
+  block:
+
+    # AB: have a look at the uri module with "return_content".
+  - name: Obtain URL of the Minimal install ISO of CentOS7
+    shell: curl -s {{ downloadiso_centos7_url }} | grep -o '{{ downloadiso_url_pattern }}'
+    args:
+      # AB: warn=False is needed to suppress warning about
+      # curl usage.
+      warn: False
+    register: url_info
+    changed_when: False
+
+  - name: Download latest ISO on the KVM host
+    vars:
+      url: "{{ url_info.stdout }}"
+      iso_file: "{{ url | regex_replace('^.*/') }}"
+    shell: "rm -f *-x86_64-Minimal-*.iso; wget {{ url }}"
+    args:
+      # AB: warn=False is needed to suppress message about
+      # rm usage. Using file module with state is absent
+      # seems too elaborate for this case.
+      warn: False
+      chdir: ~/clone_vm
+      creates: "{{ iso_file }}"
+    # AB: registration of the result is needed because
+    # other roles only execute if an ISO was downloaded. So
+    # they need to know if the download_iso_info.changed is
+    # True.
+    register: downloadiso_info
+
+  delegate_to: localhost

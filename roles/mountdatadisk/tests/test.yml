@@ -1,0 +1,6 @@
+---
+
+- name: Test mountdatadisk role
+  hosts: all
+  roles:
+    - mountdatadisk

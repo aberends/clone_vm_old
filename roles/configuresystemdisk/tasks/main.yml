@@ -1,0 +1,21 @@
+---
+
+- name: Reconfigure for new system disk
+  block:
+  - name: Correct Linux kernel command line options
+    command: chroot /tmp/root sed -i -e 's#=[^ ]*/root#=tpl/root#' -e 's#=[^ ]*/swap#=tpl/swap#' /etc/default/grub
+
+  - name: Install grub2 boot loader
+    command: chroot /tmp/root grub2-install /dev/vdc
+
+  - name: Make grub2 config
+    shell: chroot /tmp/root sh -c 'grub2-mkconfig > /boot/grub2/grub.cfg'
+
+  - name: Update filesystem table (fstab)
+    # AB: command module cannot be used here since we call
+    # blkid as an embedded command.
+    shell: chroot /tmp/root sed -i -e "s/UUID=[^ ]\+ /UUID=$(blkid /dev/vdc1 -o value -s UUID) /" -e 's#/[^-/]\+-root#/tpl-root#' -e 's#/[^-/]\+-swap#/tpl-swap#' /etc/fstab
+
+  - name: Force SELinux relabel upon next boot
+    command: chroot /tmp/root touch /.autorelabel
+  become: True

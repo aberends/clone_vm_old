@@ -1,0 +1,20 @@
+---
+
+- name: Test isochanged role with ISO unchanged
+  hosts: all
+  gather_facts: False
+  vars:
+    download_iso_info:
+      changed: False
+  tasks:
+    - name: Some dummy before task
+      debug:
+        msg: "dummy before task"
+
+    - name: Test isochanged role with ISO unchanged
+      import_role:
+        name: isochanged
+
+    - name: Some dummy after task
+      debug:
+        msg: "dummy after task"

@@ -1,0 +1,7 @@
+---
+
+- name: Test waitshutoff role
+  hosts: all
+  gather_facts: False
+  roles:
+    - role: waitshutoff
