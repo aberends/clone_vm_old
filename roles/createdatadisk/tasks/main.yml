@@ -3,28 +3,33 @@
 - name: Ensure clean data disk is created
   block:
   - name: Find domain if data disk attached to VM
-    shell: virsh list --name --all | head -n -1 | while read line; do dummy=$(virsh domblklist $line | tail -n +3 | head -n -1 | grep data); [ -n "$dummy" ] && echo "$line $dummy"; done
-    register: attached_domain_info
+    # AB: first we find all defined domains and remove the
+    # title line. Then we list all block devices per domain
+    # and grep for the device called dDOMAIN
+    shell: virsh list --name --all | head -n -1 | while read line; do dummy=$(virsh domblklist $line | tail -n +3 | head -n -1 | grep d{{ inventory_hostname }}); [ -n "$dummy" ] && echo "$line $dummy"; done
+    register: _attached_domain_info
     failed_when: False
     changed_when: False
 
+    # AB: TODO: show example output line of
+    # _attached_domain_info to make clear what the
+    # regex_replace statements do.
   - name: Detach data disk from domain
     vars:
-      domain: "{{ attached_domain_info.stdout | regex_replace(' .*') }}"
-      volume: "{{ attached_domain_info.stdout | regex_replace('^.* +') }}"
-      disk: "{{ attached_domain_info.stdout | regex_replace('^.* +([^ ]+) +.*$', '\\1') }}"
+      domain: "{{ _attached_domain_info.stdout | regex_replace(' .*') }}"
+      volume: "{{ _attached_domain_info.stdout | regex_replace('^.* +') }}"
+      disk: "{{ _attached_domain_info.stdout | regex_replace('^.* +([^ ]+) +.*$', '\\1') }}"
     command: virsh detach-disk {{ domain }} {{ volume }}
-    when: attached_domain_info.stdout != "" 
+    when: _attached_domain_info.stdout != "" 
 
   - name: Delete data disk
-    command: virsh vol-delete data os
+    command: virsh vol-delete d{{ inventory_hostname }} {{ createdatadisk_vg }}
     args:
-      removes: /dev/os/data
+      removes: /dev/{{ createdatadisk_vg }}/d{{ inventory_hostname }}
 
   - name: Create new data disk
-    command: virsh vol-create-as os data 2g
+    command: virsh vol-create-as {{ createdatadisk_vg }} d{{ inventory_hostname }} 2g
     args:
-      creates: /dev/os/data
-
+      creates: /dev/{{ createdatadisk_vg }}/d{{ inventory_hostname }}
   become: True
   delegate_to: localhost

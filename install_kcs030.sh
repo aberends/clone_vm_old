@@ -1,11 +1,11 @@
 #!/bin/bash
 
 DOMAIN=kcs030
-
+VG="fedora"
 virsh destroy $DOMAIN
 virsh undefine $DOMAIN
-virsh vol-delete $DOMAIN os
-virsh vol-create-as os $DOMAIN 5g
+virsh vol-delete $DOMAIN $VG
+virsh vol-create-as $VG $DOMAIN 5g
 
 MEMORY=1024
 DESCRIPTION="Puppet server"
@@ -25,7 +25,7 @@ virt-install \
   --initrd-inject=$KICKSTART_PATH \
   --os-variant=centos7.0 \
   --boot=hd \
-  --disk=vol=os/$DOMAIN,device=disk,bus=virtio \
+  --disk=vol=$VG/$DOMAIN,device=disk,bus=virtio \
   --network=network=default,mac=$MAC \
   --graphics=none \
   --noautoconsole \

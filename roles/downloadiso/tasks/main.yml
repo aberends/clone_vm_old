@@ -2,33 +2,36 @@
 
 - name: Download new CentOS7 ISO and remove old ones
   block:
-
-    # AB: have a look at the uri module with "return_content".
+    # AB: TODO: have a look at the uri module with
+    # "return_content".
   - name: Obtain URL of the Minimal install ISO of CentOS7
     shell: curl -s {{ downloadiso_centos7_url }} | grep -o '{{ downloadiso_url_pattern }}'
     args:
-      # AB: warn=False is needed to suppress warning about
-      # curl usage.
-      warn: False
-    register: url_info
-    changed_when: False
+      # AB: warn=false is needed to suppress the warning
+      # about curl usage.
+      warn: false
+    register: _url_info
+    changed_when: false
 
   - name: Download latest ISO on the KVM host
     vars:
-      url: "{{ url_info.stdout }}"
+      url: "{{ _url_info.stdout }}"
       iso_file: "{{ url | regex_replace('^.*/') }}"
-    shell: "rm -f *-x86_64-Minimal-*.iso; wget {{ url }}"
+    shell: "rm -f {{ downloadiso_iso_pattern }}; wget {{ url }}"
     args:
-      # AB: warn=False is needed to suppress message about
+      # AB: warn=false is needed to suppress message about
       # rm usage. Using file module with state is absent
       # seems too elaborate for this case.
-      warn: False
-      chdir: ~/clone_vm
+      warn: false
+      chdir: "{{ downloadiso_clone_vm_dir }}"
       creates: "{{ iso_file }}"
     # AB: registration of the result is needed because
     # other roles only execute if an ISO was downloaded. So
     # they need to know if the download_iso_info.changed is
-    # True.
+    # true.
     register: downloadiso_info
 
   delegate_to: localhost
+  # AB: the ISO is the same for all possible template VM's
+  # so we only run once.
+  run_once: true

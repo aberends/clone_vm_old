@@ -2,23 +2,31 @@
 
 - name: Remove VM and its disk
   block:
-
   - name: Make sure VM is destroyed
     virt:
       state: destroyed
       name: "{{ inventory_hostname }}"
-    failed_when: False
+    # AB: we set failed_when to false to protect against the
+    # situation in which the domain does not exist at all,
+    # i.e. is undefined. So basically both state "destroyed"
+    # and state "undefined" are desired here. Either one is
+    # correct.
+    failed_when: false
 
   - name: Make sure VM is undefined
     virt:
+      # AB: the command here does not require the
+      # "undefined" state, it merely executes the undefine
+      # command on the specified domain.
       command: undefine
       name: "{{ inventory_hostname }}"
-    failed_when: False
+    # AB: protect against the situation that the domain does
+    # not exist, so set failed_when to false.
+    failed_when: false
 
   - name: Remove disk of VM
-    command: virsh vol-delete {{ inventory_hostname }} os
+    command: virsh vol-delete {{ inventory_hostname }} {{ cleanupvm_vg }}
     args:
-      removes: /dev/os/{{ inventory_hostname }}
-
-  become: True
+      removes: /dev/{{ cleanupvm_vg }}/{{ inventory_hostname }}
+  become: true
   delegate_to: localhost

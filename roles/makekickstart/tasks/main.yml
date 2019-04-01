@@ -1,12 +1,14 @@
 ---
 
-- name: Gather facts for localhost
-  setup:
-  delegate_to: localhost
+#- name: Gather facts for localhost
+#  setup:
+#  delegate_to: localhost
 
 - name: Create kickstart file
   template:
+    # AB: the source is relative to
+    # makekickstart_clone_vm_dir.
     src: templates/domain.ks.j2
-    dest: "{{ path }}"
+    dest: "{{ makekickstart_path }}"
   delegate_to: localhost
 

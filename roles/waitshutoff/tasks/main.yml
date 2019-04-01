@@ -1,5 +1,11 @@
 ---
 
+  # AB: since a prerequiste for some roles is that the VM is
+  # "shut off", we poll the VM state to make sure it is
+  # indeed "shut off". The timing is set to a maximum of 100
+  # * 3s = 300s because the kickstartinstall role can take
+  # up almost 300s. If it takes longer we assume something
+  # is wrong and human intervention is needed.
 - name: Wait until VM is powered off
   command: virsh domstate {{ inventory_hostname }}
   retries: 100

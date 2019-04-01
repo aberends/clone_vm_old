@@ -3,47 +3,48 @@
 - name: Ensure clean template disk is created
   block:
   - name: Find domain if template disk attached to VM
-    shell: virsh list --name --all | head -n -1 | while read line; do dummy=$(virsh domblklist $line | tail -n +3 | head -n -1 | grep tpl); [ -n "$dummy" ] && echo "$line $dummy"; done
-    register: attached_domain_info
+    shell: virsh list --name --all | head -n -1 | while read line; do dummy=$(virsh domblklist $line | tail -n +3 | head -n -1 | grep t{{ inventory_hostname }}); [ -n "$dummy" ] && echo "$line $dummy"; done
+    register: _attached_domain_info
     failed_when: False
     changed_when: False
     delegate_to: localhost
 
   - name: Detach template disk from domain
     vars:
-      domain: "{{ attached_domain_info.stdout | regex_replace(' .*') }}"
-      volume: "{{ attached_domain_info.stdout | regex_replace('^.* +') }}"
-      disk: "{{ attached_domain_info.stdout | regex_replace('^.* +([^ ]+) +.*$', '\\1') }}"
+      domain: "{{ _attached_domain_info.stdout | regex_replace(' .*') }}"
+      volume: "{{ _attached_domain_info.stdout | regex_replace('^.* +') }}"
+      disk: "{{ _attached_domain_info.stdout | regex_replace('^.* +([^ ]+) +.*$', '\\1') }}"
     command: virsh detach-disk {{ domain }} {{ volume }}
-    when: attached_domain_info.stdout != "" 
+    when: _attached_domain_info.stdout != "" 
     delegate_to: localhost
 
   - name: Delete template disk
-    command: virsh vol-delete tpl os
+    command: virsh vol-delete t{{ inventory_hostname }} {{ createtemplatedisk_vg }}
     args:
-      removes: /dev/os/tpl
+      removes: /dev/{{ createtemplatedisk_vg }}/t{{ inventory_hostname }}
     delegate_to: localhost
 
   - name: Calculate root parition size in MiB
     shell: ls -l --block-size=1M /mnt/data/rootfs | awk '{ print $5 }'
-    register: root_size_info
+    register: _root_size_info
     failed_when: False
     changed_when: False
 
   - name: Calculate boot parition size in MiB
     shell: ls -l --block-size=1M /mnt/data/bootfs | awk '{ print $5 }'
+    # AB: the createtemplatedisk_boot_size_info is needed in
+    # the role preparetemplatedisk.
     register: createtemplatedisk_boot_size_info
     failed_when: False
     changed_when: False
 
   - name: Create new template disk
     vars:
-      root_size: "{{ root_size_info.stdout|int + 150 }}"
-      boot_size: "{{ createtemplatedisk_boot_size_info.stdout|int + 50 }}"
+      root_size: "{{ _root_size_info.stdout|int + createtemplatedisk_add_root_mb|int }}"
+      boot_size: "{{ createtemplatedisk_boot_size_info.stdout|int + createtemplatedisk_add_boot_mb|int }}"
       total_size: "{{ root_size|int + boot_size|int }}"
-    command: virsh vol-create-as os tpl {{ total_size }}M
+    command: virsh vol-create-as {{ createtemplatedisk_vg }} t{{ inventory_hostname }} {{ total_size }}M
     args:
-      creates: /dev/os/tpl
+      creates: /dev/{{ createtemplatedisk_vg }}/t{{ inventory_hostname }}
     delegate_to: localhost
-
   become: True

@@ -1,8 +1,11 @@
 ---
 
+  # AB: we use the naming convention that the system disk
+  # belonging to domain x is called x. Hence it comes up on
+  # the KVM host as /dev/VG/x.
 - name: Create disk of VM
-  command: virsh vol-create-as os {{ inventory_hostname }} 4g
+  command: virsh vol-create-as {{ makevolume_vg }} {{ inventory_hostname }} {{ makevolume_size }}
   args:
-    creates: /dev/os/{{ inventory_hostname }}
-  become: True
+    creates: /dev/{{ makevolume_vg }}/{{ inventory_hostname }}
+  become: true
   delegate_to: localhost

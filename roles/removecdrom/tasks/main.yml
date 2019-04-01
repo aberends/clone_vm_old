@@ -10,13 +10,12 @@
     # show up in dumpxml, the VM must be stopped (and
     # possibly started again).
     #shell: virsh dumpxml {{ inventory_hostname }} | grep cdrom
-    register: has_cdrom_info
+    register: _has_cdrom_info
     changed_when: false
     failed_when: false
 
   - name: Remove CDROM from VM
     command: virt-xml {{ inventory_hostname }} --remove-device --disk device=cdrom
-    when: has_cdrom_info.rc == 0
-
+    when: _has_cdrom_info.rc == 0
   become: True
   delegate_to: localhost

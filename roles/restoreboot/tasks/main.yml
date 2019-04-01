@@ -4,7 +4,7 @@
   block:
   - name: Check if boot parition is mounted
     command: mountpoint -q /tmp/root/boot
-    register: boot_lv_mounted_info
+    register: _boot_lv_mounted_info
     changed_when: false
     failed_when: false
 
@@ -12,7 +12,7 @@
     command: mount /dev/vdc1 /tmp/root/boot
     args:
       warn: false
-    when: boot_lv_mounted_info.rc == 1
+    when: _boot_lv_mounted_info.rc == 1
 
   - name: XFS restore from data disk onto root LV
     command: xfsrestore -f /mnt/data/bootfs /tmp/root/boot

@@ -1,0 +1,11 @@
+<pool type='logical'>
+  <name>{{ installsoftware_vg }}</name>
+  <source>
+    <device path='{{ installsoftware_dev }}'/>
+    <name>{{ installsoftware_vg }}</name>
+    <format type='lvm2'/>
+  </source>
+  <target>
+    <path>/dev/{{ installsoftware_vg }}</path>
+  </target>
+</pool>

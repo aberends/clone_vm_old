@@ -1,3 +1,8 @@
 ---
 
+# AB: since a VM needs to be powered down several times in
+# the play, waiting for its state "shut off" needs to be
+# checked several times too. If we don't specify
+# allow_duplicates=true here, only the first call of the
+# role is honoured and the other ones are silently skipped.
 allow_duplicates: true

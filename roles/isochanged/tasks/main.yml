@@ -1,6 +1,13 @@
 ---
 
-- name: Stop the play when ISO did not change
+- name: Stop the play when the ISO did not change
   meta: end_play
+  # AB: here we depend on the externally provided variable
+  # downloadiso_info. If the downloadiso role is not
+  # executed the value of downloadiso_info has to be
+  # provided.
   when: not downloadiso_info.changed and not isochanged_skip
   delegate_to: localhost
+  # AB: note, we don't have to specify run once here. The
+  # end_play meta task affects all hosts.
+  #run_once: true

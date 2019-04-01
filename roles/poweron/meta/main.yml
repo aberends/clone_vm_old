@@ -1,3 +1,8 @@
 ---
 
+# AB: since a VM needs to be powered on several times in
+# the play, we need to allow multiple calls of this role.
+# If we don't specify allow_duplicates=true here, only the
+# first call of the role is honoured and the other ones are
+# silently skipped.
 allow_duplicates: true

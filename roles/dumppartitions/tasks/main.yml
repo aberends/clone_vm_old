@@ -2,7 +2,6 @@
 
 - name: XFS dump partitions
   block:
-
   - name: Dump the root partition
     command: xfsdump -L '' -M '' -f /mnt/data/rootfs /
     args:
@@ -12,5 +11,4 @@
     command: xfsdump -L '' -M '' -f /mnt/data/bootfs /boot
     args:
       creates: /mnt/data/bootfs
-
   become: True

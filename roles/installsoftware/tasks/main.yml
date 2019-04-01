@@ -1,0 +1,65 @@
+---
+
+- name: Prepare KVM host
+  block:
+  - name: Install necessary software on KVM host
+    yum:
+      name:
+      - '@virtualization'
+      - libguestfs
+      - libguestfs-xfs
+      - libguestfs-zfs
+      - libguestfs-jfs
+      - python2-libguestfs
+      - python2-libvirt
+      - python2-lxml
+      - python3-libguestfs
+      - python3-libvirt
+      - python3-lxml
+      - libguestfs-tools
+      - libguestfs-tools-c
+      - libguestfs-rescue
+      - wget
+      state: present
+
+  - name: Adapt /etc/hosts for host
+    vars:
+      ipv4: "192.168.122.{{ inventory_hostname | regex_replace('^...0*') }}"
+      ipv4re: "192\\.168\\.122\\.{{ inventory_hostname | regex_replace('^...0*') }}"
+      hostname: '{{ inventory_hostname }}.home.org'
+      line: "{{ '%-15.15s  %s %s'|format(ipv4, hostname, inventory_hostname) }}"
+    lineinfile:
+      path: /etc/hosts
+      regexp: '^{{ ipv4re }}'
+      line: '{{ line }}'
+      state: present
+
+  - name: Allow user qemu to access the home directory
+    acl:
+      path: "{{ lookup('env', 'HOME') }}"
+      entity: qemu
+      etype: user
+      permissions: x
+      state: present
+
+  - name: Define the storage pool
+    virt_pool:
+      command: define
+      name: '{{ installsoftware_vg }}'
+      xml: '{{ lookup("template", "templates/pool.xml.j2") }}'
+      autostart: true
+
+  - name: Set the storage pool to autostart
+    virt_pool:
+      name: '{{ installsoftware_vg }}'
+      autostart: true
+
+  - name: Start the storage pool
+    virt_pool:
+      name: '{{ installsoftware_vg }}'
+      state: active
+      autostart: true
+  become: true
+  delegate_to: localhost
+  # AB: this role only needs to be run on the KVM host.
+  run_once: true

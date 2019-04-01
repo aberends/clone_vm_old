@@ -1,9 +1,10 @@
 - name: Create CentOS 7 VM
-  hosts: puc052
+  hosts: all
   vars:
     isochanged_skip: true
   gather_facts: false
   roles:
+  - installsoftware
   - downloadiso
   - isochanged
   - cleanupvm
@@ -12,6 +13,7 @@
   - kickstartinstall
   - waitshutoff
   - removecdrom
+  - addpcierootport
   - poweron
   - testssh
   - pubkeylogin

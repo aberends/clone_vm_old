@@ -1,23 +1,36 @@
 ---
 
-- name: Partition data disk
+- name: Prepare data disk
   block:
-
   - name: Obtain information about current partitions
     parted:
       device: /dev/vdb
       unit: MiB
-    register: partitions_info
+    register: _partitions_info
+    # AB: after attaching (hot plugging) a disk device to
+    # the VM it takes a number of seconds for the device
+    # file, i.e. /dev/vdb, to be present. Hence we need to
+    # retry the command after 2 seconds.
+    until: _partitions_info.disk is defined
+    retries: 1
+    delay: 2
+    changed_when: false
 
+  - name: Show the information
+    debug:
+      msg: "{{ _partitions_info }}"
+
+    # AB: the data disk is repartitioned if it does not have
+    # exactly 1 partition that occupies the whole disk.
   - name: Remove existing partitions
     parted:
       device: /dev/vdb
       number: "{{ item.num }}"
       state: absent
-    loop: "{{ partitions_info.partitions }}"
-    when: (partitions_info.partitions|length > 1) or
-          (partitions_info.partitions|length == 1 and
-           partitions_info.disk.size != partitions_info.partitions.0.end)
+    loop: "{{ _partitions_info.partitions }}"
+    when: (_partitions_info.partitions|length > 1) or
+          (_partitions_info.partitions|length == 1 and
+           _partitions_info.disk.size != _partitions_info.partitions.0.end)
 
   - name: Partition the given disk
     parted:
@@ -28,10 +41,11 @@
       part_end: 100%
       state: present
 
+    # AB: we use force here to avoid that a former
+    # installation interferes with the filesystem.
   - name: Create XFS filesystem on disk
     filesystem:
       dev: /dev/vdb1
       fstype: xfs
       force: yes
-
   become: True

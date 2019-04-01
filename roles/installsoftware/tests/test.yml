@@ -1,0 +1,7 @@
+---
+
+- name: Test poweroff role
+  hosts: all
+  gather_facts: False
+  roles:
+    - role: poweroff

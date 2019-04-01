@@ -78,6 +78,7 @@ We use the following commands:
 - virt-manager
 - virt-resize
 - virt-xml
+- wget
 
 In the CentOS7 yum repositories a number of groups related
 to virtualization exist. They can be found with the

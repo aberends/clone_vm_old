@@ -1,6 +1,20 @@
 ---
 
-domain: "{{ inventory_hostname }}"
-ipv4: "192.168.122.{{ domain | regex_replace('^...0*') }}"
-path: "{{ lookup('env', 'HOME') }}/clone_vm/{{ domain }}.ks"
-timezone: Europe/Amsterdam
+# AB: the convention used is to end the inventory hostname
+# with the octet it has in the IPv4 subnet 192.168.122. If
+# the octet's decimal length is shorter than 3 we prepend it
+# with zero's.
+makekickstart_ipv4: "192.168.122.{{ inventory_hostname | regex_replace('^...0*') }}"
+
+# AB: the ISO and software are located in a certain
+# directory. The default value is set here.
+makekickstart_clone_vm_dir: '~/clone_vm'
+
+# AB: the path of the kickstart file.
+makekickstart_path: "{{ makekickstart_clone_vm_dir }}/{{ inventory_hostname }}.ks"
+
+# AB: the timezone, e.g. "timedatectl show -p Timezone". See
+# also /etc/localtime, localtime(5), /usr/share/zoneinfo,
+# tzselect(8), timedatectl(1). The last command has an
+# option to show timezones: "timedatectl list-timezones".
+makekickstart_timezone: Europe/Amsterdam

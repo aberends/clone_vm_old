@@ -1,0 +1,398 @@
+ATTACH_DISK_PROBLEM
+
+
+OBJECTIVE
+
+Describe what the problem is when attaching 2 disks with the
+command "virsh attach-disk ...".
+
+
+AUTHOR
+
+Allard Berends (AB)
+
+
+HISTORY
+
+Date with 'LC_TIME=en_US date +"\%d-\%b-\%Y \%H:\%M", '.
+30-Mar-2019 10:37, AB, start
+
+
+REFERENCES
+
+[kvm_wp]          Kernel-based Virtual Machine,
+                  https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine
+
+[libvirt_pci_hp]  libvirt: PCI topology and hotplug,
+                  https://libvirt.org/pci-hotplug.html
+
+[libvirt_domxml]  libvirt: Domain XML format,
+                  https://libvirt.org/formatdomain.html
+
+
+ABBREVIATIONS
+
+KVM               Kernel-based Virtual Machine
+
+
+TERMS
+
+KVM               Kernel-based Virtual Machine (KVM) is a
+                  virtualization module in the Linux kernel
+                  that allows the kernel to function as a
+                  hypervisor. More information on [kvm_wp].
+
+
+SECTIONS
+
+Create with:
+- delete current entries
+- save file
+- exter "ex" mode by typing ':'
+- r !sed -n 's/^\([A-Z0-9][A-Z_0-9]*\)$/- \1/p' %:p
+
+
+VIRT_INSTALL
+
+We use the virt-install command with a kickstart file to
+install the VM. An example command is:
+
+#
+DOMAIN=kcs030
+VG="fedora"
+virsh destroy $DOMAIN
+virsh undefine $DOMAIN
+virsh vol-delete $DOMAIN $VG
+virsh vol-create-as $VG $DOMAIN 5g
+
+MEMORY=1024
+DESCRIPTION="Puppet server"
+CDROM_PATH=/home/allard/clone_vm/CentOS-7-x86_64-Minimal-1810.iso
+KICKSTART_PATH=/home/allard/clone_vm/$DOMAIN.ks
+MAC=$(printf "52:54:%2.2x:%2.2x:%2.2x:%2.2x" 192 168 122 30)
+
+virt-install \
+  --connect qemu:///system \
+  --name=$DOMAIN \
+  --memory=$MEMORY \
+  --arch=x86_64 \
+  --metadata=description="$DESCRIPTION" \
+  --vcpus=vcpus=1 \
+  --location=$CDROM_PATH \
+  --extra-args="ks=file:/$DOMAIN.ks console=ttyS0,115200 inst.sshd" \
+  --initrd-inject=$KICKSTART_PATH \
+  --os-variant=centos7.0 \
+  --boot=hd \
+  --disk=vol=$VG/$DOMAIN,device=disk,bus=virtio \
+  --network=network=default,mac=$MAC \
+  --graphics=none \
+  --noautoconsole \
+  --hvm \
+  --autostart
+
+The installation takes a couple of minutes. The actual
+command line of starting the VM is:
+
+# ps -ef | grep qemu | grep kcs030
+qemu     11158     1 85 10:44 ?        00:02:34 /usr/bin/qemu-system-x86_64 -machine accel=kvm -name guest=kcs030,debug-threads=on -S -object secret,id=masterKey0,format=raw,file=/var/lib/libvirt/qemu/domain-2-kcs030/master-key.aes -machine pc-q35-3.0,accel=kvm,usb=off,dump-guest-core=off -cpu Skylake-Client-IBRS,ss=on,vmx=on,hypervisor=on,tsc_adjust=on,clflushopt=on,ssbd=on,xsaves=on,pdpe1gb=on,hle=off,rtm=off -m 1024 -realtime mlock=off -smp 1,sockets=1,cores=1,threads=1 -uuid e293d3ec-8c50-44ef-b3bb-90e879ab441d -display none -no-user-config -nodefaults -chardev socket,id=charmonitor,fd=32,server,nowait -mon chardev=charmonitor,id=monitor,mode=control -rtc base=utc,driftfix=slew -global kvm-pit.lost_tick_policy=delay -no-hpet -no-reboot -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1 -boot strict=on -kernel /var/lib/libvirt/boot/virtinst-vmlinuz.ip1fqf5v -initrd /var/lib/libvirt/boot/virtinst-initrd.img.li39kpto -append ks=file:/kcs030.ks console=ttyS0,115200 inst.sshd -device pcie-root-port,port=0x8,chassis=1,id=pci.1,bus=pcie.0,multifunction=on,addr=0x1 -device pcie-root-port,port=0x9,chassis=2,id=pci.2,bus=pcie.0,addr=0x1.0x1 -device pcie-root-port,port=0xa,chassis=3,id=pci.3,bus=pcie.0,addr=0x1.0x2 -device pcie-root-port,port=0xb,chassis=4,id=pci.4,bus=pcie.0,addr=0x1.0x3 -device pcie-root-port,port=0xc,chassis=5,id=pci.5,bus=pcie.0,addr=0x1.0x4 -device pcie-root-port,port=0xd,chassis=6,id=pci.6,bus=pcie.0,addr=0x1.0x5 -device pcie-root-port,port=0xe,chassis=7,id=pci.7,bus=pcie.0,addr=0x1.0x6 -device qemu-xhci,p2=15,p3=15,id=usb,bus=pci.2,addr=0x0 -device virtio-serial-pci,id=virtio-serial0,bus=pci.3,addr=0x0 -drive file=/dev/fedora/kcs030,format=raw,if=none,id=drive-virtio-disk0,cache=none,aio=native -device virtio-blk-pci,scsi=off,bus=pci.4,addr=0x0,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=1,write-cache=on -drive file=/home/allard/clone_vm/CentOS-7-x86_64-Minimal-1810.iso,format=raw,if=none,id=drive-sata0-0-0,media=cdrom,readonly=on -device ide-cd,bus=ide.0,drive=drive-sata0-0-0,id=sata0-0-0 -netdev tap,fd=34,id=hostnet0,vhost=on,vhostfd=35 -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:c0:a8:7a:1e,bus=pci.1,addr=0x0 -chardev pty,id=charserial0 -device isa-serial,chardev=charserial0,id=serial0 -chardev socket,id=charchannel0,fd=36,server,nowait -device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0 -device virtio-balloon-pci,id=balloon0,bus=pci.5,addr=0x0 -object rng-random,id=objrng0,filename=/dev/urandom -device virtio-rng-pci,rng=objrng0,id=rng0,bus=pci.6,addr=0x0 -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny -msg timestamp=on
+
+
+VIRT_MANAGER_NEW_VM
+
+When we do an installation of a new VM with virt-manager,
+then the command for starting the VM is:
+
+# ps -ef | grep qemu | grep kcs020
+qemu     12384     1 72 10:51 ?        00:00:21 /usr/bin/qemu-system-x86_64 -machine accel=kvm -name guest=kcs020,debug-threads=on -S -object secret,id=masterKey0,format=raw,file=/var/lib/libvirt/qemu/domain-4-kcs020/master-key.aes -machine pc-q35-3.0,accel=kvm,usb=off,vmport=off,dump-guest-core=off -cpu Skylake-Client-IBRS,ss=on,vmx=on,hypervisor=on,tsc_adjust=on,clflushopt=on,ssbd=on,xsaves=on,pdpe1gb=on,hle=off,rtm=off -m 1024 -realtime mlock=off -smp 1,sockets=1,cores=1,threads=1 -uuid c0154163-95f2-44cc-aa89-67b8e4f26dfd -no-user-config -nodefaults -chardev socket,id=charmonitor,fd=34,server,nowait -mon chardev=charmonitor,id=monitor,mode=control -rtc base=utc,driftfix=slew -global kvm-pit.lost_tick_policy=delay -no-hpet -no-reboot -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1 -boot strict=on -device pcie-root-port,port=0x10,chassis=1,id=pci.1,bus=pcie.0,multifunction=on,addr=0x2 -device pcie-root-port,port=0x11,chassis=2,id=pci.2,bus=pcie.0,addr=0x2.0x1 -device pcie-root-port,port=0x12,chassis=3,id=pci.3,bus=pcie.0,addr=0x2.0x2 -device pcie-root-port,port=0x13,chassis=4,id=pci.4,bus=pcie.0,addr=0x2.0x3 -device pcie-root-port,port=0x14,chassis=5,id=pci.5,bus=pcie.0,addr=0x2.0x4 -device pcie-root-port,port=0x15,chassis=6,id=pci.6,bus=pcie.0,addr=0x2.0x5 -device pcie-root-port,port=0x16,chassis=7,id=pci.7,bus=pcie.0,addr=0x2.0x6 -device qemu-xhci,p2=15,p3=15,id=usb,bus=pci.2,addr=0x0 -device virtio-serial-pci,id=virtio-serial0,bus=pci.3,addr=0x0 -drive file=/dev/fedora/kcs020,format=raw,if=none,id=drive-virtio-disk0,cache=none,aio=native -device virtio-blk-pci,scsi=off,bus=pci.4,addr=0x0,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=2,write-cache=on -drive file=/home/allard/clone_vm/CentOS-7-x86_64-Minimal-1810.iso,format=raw,if=none,id=drive-sata0-0-0,media=cdrom,readonly=on -device ide-cd,bus=ide.0,drive=drive-sata0-0-0,id=sata0-0-0,bootindex=1 -netdev tap,fd=36,id=hostnet0,vhost=on,vhostfd=37 -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:c0:a8:7a:14,bus=pci.1,addr=0x0 -chardev pty,id=charserial0 -device isa-serial,chardev=charserial0,id=serial0 -chardev socket,id=charchannel0,fd=38,server,nowait -device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0 -chardev spicevmc,id=charchannel1,name=vdagent -device virtserialport,bus=virtio-serial0.0,nr=2,chardev=charchannel1,id=channel1,name=com.redhat.spice.0 -device usb-tablet,id=input0,bus=usb.0,port=1 -spice port=5900,addr=127.0.0.1,disable-ticketing,image-compression=off,seamless-migration=on -device qxl-vga,id=video0,ram_size=67108864,vram_size=67108864,vram64_size_mb=0,vgamem_mb=16,max_outputs=1,bus=pcie.0,addr=0x1 -device ich9-intel-hda,id=sound0,bus=pcie.0,addr=0x1b -device hda-duplex,id=sound0-codec0,bus=sound0.0,cad=0 -chardev spicevmc,id=charredir0,name=usbredir -device usb-redir,chardev=charredir0,id=redir0,bus=usb.0,port=2 -chardev spicevmc,id=charredir1,name=usbredir -device usb-redir,chardev=charredir1,id=redir1,bus=usb.0,port=3 -device virtio-balloon-pci,id=balloon0,bus=pci.5,addr=0x0 -object rng-random,id=objrng0,filename=/dev/urandom -device virtio-rng-pci,rng=objrng0,id=rng0,bus=pci.6,addr=0x0 -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny -msg timestamp=on
+
+After the reboot:
+
+qemu     12995     1 40 11:17 ?        00:00:13 /usr/bin/qemu-system-x86_64 -machine accel=kvm -name guest=kcs020,debug-threads=on -S -object secret,id=masterKey0,format=raw,file=/var/lib/libvirt/qemu/domain-5-kcs020/master-key.aes -machine pc-q35-3.0,accel=kvm,usb=off,vmport=off,dump-guest-core=off -cpu Skylake-Client-IBRS,ss=on,vmx=on,hypervisor=on,tsc_adjust=on,clflushopt=on,ssbd=on,xsaves=on,pdpe1gb=on,hle=off,rtm=off -m 1024 -realtime mlock=off -smp 1,sockets=1,cores=1,threads=1 -uuid c0154163-95f2-44cc-aa89-67b8e4f26dfd -no-user-config -nodefaults -chardev socket,id=charmonitor,fd=34,server,nowait -mon chardev=charmonitor,id=monitor,mode=control -rtc base=utc,driftfix=slew -global kvm-pit.lost_tick_policy=delay -no-hpet -no-shutdown -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1 -boot strict=on -device pcie-root-port,port=0x10,chassis=1,id=pci.1,bus=pcie.0,multifunction=on,addr=0x2 -device pcie-root-port,port=0x11,chassis=2,id=pci.2,bus=pcie.0,addr=0x2.0x1 -device pcie-root-port,port=0x12,chassis=3,id=pci.3,bus=pcie.0,addr=0x2.0x2 -device pcie-root-port,port=0x13,chassis=4,id=pci.4,bus=pcie.0,addr=0x2.0x3 -device pcie-root-port,port=0x14,chassis=5,id=pci.5,bus=pcie.0,addr=0x2.0x4 -device pcie-root-port,port=0x15,chassis=6,id=pci.6,bus=pcie.0,addr=0x2.0x5 -device pcie-root-port,port=0x16,chassis=7,id=pci.7,bus=pcie.0,addr=0x2.0x6 -device qemu-xhci,p2=15,p3=15,id=usb,bus=pci.2,addr=0x0 -device virtio-serial-pci,id=virtio-serial0,bus=pci.3,addr=0x0 -drive file=/dev/fedora/kcs020,format=raw,if=none,id=drive-virtio-disk0,cache=none,aio=native -device virtio-blk-pci,scsi=off,bus=pci.4,addr=0x0,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=1,write-cache=on -drive if=none,id=drive-sata0-0-0,media=cdrom,readonly=on -device ide-cd,bus=ide.0,drive=drive-sata0-0-0,id=sata0-0-0 -netdev tap,fd=36,id=hostnet0,vhost=on,vhostfd=37 -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:c0:a8:7a:14,bus=pci.1,addr=0x0 -chardev pty,id=charserial0 -device isa-serial,chardev=charserial0,id=serial0 -chardev socket,id=charchannel0,fd=38,server,nowait -device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0 -chardev spicevmc,id=charchannel1,name=vdagent -device virtserialport,bus=virtio-serial0.0,nr=2,chardev=charchannel1,id=channel1,name=com.redhat.spice.0 -device usb-tablet,id=input0,bus=usb.0,port=1 -spice port=5900,addr=127.0.0.1,disable-ticketing,image-compression=off,seamless-migration=on -device qxl-vga,id=video0,ram_size=67108864,vram_size=67108864,vram64_size_mb=0,vgamem_mb=16,max_outputs=1,bus=pcie.0,addr=0x1 -device ich9-intel-hda,id=sound0,bus=pcie.0,addr=0x1b -device hda-duplex,id=sound0-codec0,bus=sound0.0,cad=0 -chardev spicevmc,id=charredir0,name=usbredir -device usb-redir,chardev=charredir0,id=redir0,bus=usb.0,port=2 -chardev spicevmc,id=charredir1,name=usbredir -device usb-redir,chardev=charredir1,id=redir1,bus=usb.0,port=3 -device virtio-balloon-pci,id=balloon0,bus=pci.5,addr=0x0 -object rng-random,id=objrng0,filename=/dev/urandom -device virtio-rng-pci,rng=objrng0,id=rng0,bus=pci.6,addr=0x0 -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny -msg timestamp=on
+
+
+QEMU_COMMAND_ON_CENTOS7_HOST
+
+On the CentOS 7 host we don't have a problem with attaching
+2 disks. So we examine the command used to start up the VM:
+
+# ps -ef | grep qemu | grep kcs030
+qemu      7108     1  1 13:40 ?        00:00:31 /usr/libexec/qemu-kvm -name kcs030 -S -machine pc-i440fx-rhel7.0.0,accel=kvm,usb=off,dump-guest-core=off -cpu Skylake-Client-IBRS -m 1024 -realtime mlock=off -smp 1,sockets=1,cores=1,threads=1 -uuid 116953ca-6d04-464d-a65f-2356efc06497 -display none -no-user-config -nodefaults -chardev socket,id=charmonitor,path=/var/lib/libvirt/qemu/domain-3-kcs030/monitor.sock,server,nowait -mon chardev=charmonitor,id=monitor,mode=control -rtc base=utc,driftfix=slew -global kvm-pit.lost_tick_policy=delay -no-hpet -no-shutdown -global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1 -boot strict=on -device ich9-usb-ehci1,id=usb,bus=pci.0,addr=0x4.0x7 -device ich9-usb-uhci1,masterbus=usb.0,firstport=0,bus=pci.0,multifunction=on,addr=0x4 -device ich9-usb-uhci2,masterbus=usb.0,firstport=2,bus=pci.0,addr=0x4.0x1 -device ich9-usb-uhci3,masterbus=usb.0,firstport=4,bus=pci.0,addr=0x4.0x2 -device virtio-serial-pci,id=virtio-serial0,bus=pci.0,addr=0x5 -drive file=/dev/os/kcs030,format=raw,if=none,id=drive-virtio-disk0,cache=none,aio=native -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x6,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=1 -drive if=none,id=drive-ide0-0-0,readonly=on -device ide-cd,bus=ide.0,unit=0,drive=drive-ide0-0-0,id=ide0-0-0 -netdev tap,fd=28,id=hostnet0,vhost=on,vhostfd=30 -device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:c0:a8:7a:1e,bus=pci.0,addr=0x3 -chardev pty,id=charserial0 -device isa-serial,chardev=charserial0,id=serial0 -chardev socket,id=charchannel0,path=/var/lib/libvirt/qemu/channel/target/domain-3-kcs030/org.qemu.guest_agent.0,server,nowait -device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0 -device virtio-balloon-pci,id=balloon0,bus=pci.0,addr=0x7 -object rng-random,id=objrng0,filename=/dev/urandom -device virtio-rng-pci,rng=objrng0,id=rng0,bus=pci.0,addr=0x8 -msg timestamp=on
+
+
+COMPARISON_OF_QEMU_COMMANDS
+
+We compare both commands line by line and conclude that all
+settings are the same. The only differences are in names,
+UUIDs, etc.
+
+/usr/bin/qemu-system-x86_64
+-machine accel=kvm
+-name guest=kcs030,debug-threads=on
+-S
+-object secret,id=masterKey0,format=raw,file=/var/lib/libvirt/qemu/domain-2-kcs030/master-key.aes
+-machine pc-q35-3.0,accel=kvm,usb=off,dump-guest-core=off
+-cpu Skylake-Client-IBRS,ss=on,vmx=on,hypervisor=on,tsc_adjust=on,clflushopt=on,ssbd=on,xsaves=on,pdpe1gb=on,hle=off,rtm=off
+-m 1024
+-realtime mlock=off
+-smp 1,sockets=1,cores=1,threads=1
+-uuid e293d3ec-8c50-44ef-b3bb-90e879ab441d
+-display none
+-no-user-config
+-nodefaults
+-chardev socket,id=charmonitor,fd=32,server,nowait
+-mon chardev=charmonitor,id=monitor,mode=control
+-rtc base=utc,driftfix=slew
+-global kvm-pit.lost_tick_policy=delay
+-no-hpet
+-no-reboot
+-global ICH9-LPC.disable_s3=1
+-global ICH9-LPC.disable_s4=1
+-boot strict=on
+-kernel /var/lib/libvirt/boot/virtinst-vmlinuz.ip1fqf5v
+-initrd /var/lib/libvirt/boot/virtinst-initrd.img.li39kpto
+-append ks=file:/kcs030.ks console=ttyS0,115200 inst.sshd
+-device pcie-root-port,port=0x8,chassis=1,id=pci.1,bus=pcie.0,multifunction=on,addr=0x1
+-device pcie-root-port,port=0x9,chassis=2,id=pci.2,bus=pcie.0,addr=0x1.0x1
+-device pcie-root-port,port=0xa,chassis=3,id=pci.3,bus=pcie.0,addr=0x1.0x2
+-device pcie-root-port,port=0xb,chassis=4,id=pci.4,bus=pcie.0,addr=0x1.0x3
+-device pcie-root-port,port=0xc,chassis=5,id=pci.5,bus=pcie.0,addr=0x1.0x4
+-device pcie-root-port,port=0xd,chassis=6,id=pci.6,bus=pcie.0,addr=0x1.0x5
+-device pcie-root-port,port=0xe,chassis=7,id=pci.7,bus=pcie.0,addr=0x1.0x6
+-device qemu-xhci,p2=15,p3=15,id=usb,bus=pci.2,addr=0x0
+-device virtio-serial-pci,id=virtio-serial0,bus=pci.3,addr=0x0
+-drive file=/dev/fedora/kcs030,format=raw,if=none,id=drive-virtio-disk0,cache=none,aio=native
+-device virtio-blk-pci,scsi=off,bus=pci.4,addr=0x0,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=1,write-cache=on
+-drive file=/home/allard/clone_vm/CentOS-7-x86_64-Minimal-1810.iso,format=raw,if=none,id=drive-sata0-0-0,media=cdrom,readonly=on
+-device ide-cd,bus=ide.0,drive=drive-sata0-0-0,id=sata0-0-0
+-netdev tap,fd=34,id=hostnet0,vhost=on,vhostfd=35
+-device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:c0:a8:7a:1e,bus=pci.1,addr=0x0
+-chardev pty,id=charserial0
+-device isa-serial,chardev=charserial0,id=serial0
+-chardev socket,id=charchannel0,fd=36,server,nowait
+-device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0
+-device virtio-balloon-pci,id=balloon0,bus=pci.5,addr=0x0
+-object rng-random,id=objrng0,filename=/dev/urandom
+-device virtio-rng-pci,rng=objrng0,id=rng0,bus=pci.6,addr=0x0
+-sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny
+-msg timestamp=on
+
+/usr/bin/qemu-system-x86_64
+-machine accel=kvm
+-name guest=kcs020,debug-threads=on
+-S
+-object secret,id=masterKey0,format=raw,file=/var/lib/libvirt/qemu/domain-4-kcs020/master-key.aes
+-machine pc-q35-3.0,accel=kvm,usb=off,vmport=off,dump-guest-core=off
+-cpu Skylake-Client-IBRS,ss=on,vmx=on,hypervisor=on,tsc_adjust=on,clflushopt=on,ssbd=on,xsaves=on,pdpe1gb=on,hle=off,rtm=off
+-m 1024
+-realtime mlock=off
+-smp 1,sockets=1,cores=1,threads=1
+-uuid c0154163-95f2-44cc-aa89-67b8e4f26dfd
+-no-user-config
+-nodefaults
+-chardev socket,id=charmonitor,fd=34,server,nowait
+-mon chardev=charmonitor,id=monitor,mode=control
+-rtc base=utc,driftfix=slew
+-global kvm-pit.lost_tick_policy=delay
+-no-hpet
+-no-reboot
+-global ICH9-LPC.disable_s3=1
+-global ICH9-LPC.disable_s4=1
+-boot strict=on
+-device pcie-root-port,port=0x10,chassis=1,id=pci.1,bus=pcie.0,multifunction=on,addr=0x2
+-device pcie-root-port,port=0x11,chassis=2,id=pci.2,bus=pcie.0,addr=0x2.0x1
+-device pcie-root-port,port=0x12,chassis=3,id=pci.3,bus=pcie.0,addr=0x2.0x2
+-device pcie-root-port,port=0x13,chassis=4,id=pci.4,bus=pcie.0,addr=0x2.0x3
+-device pcie-root-port,port=0x14,chassis=5,id=pci.5,bus=pcie.0,addr=0x2.0x4
+-device pcie-root-port,port=0x15,chassis=6,id=pci.6,bus=pcie.0,addr=0x2.0x5
+-device pcie-root-port,port=0x16,chassis=7,id=pci.7,bus=pcie.0,addr=0x2.0x6
+-device qemu-xhci,p2=15,p3=15,id=usb,bus=pci.2,addr=0x0
+-device virtio-serial-pci,id=virtio-serial0,bus=pci.3,addr=0x0
+-drive file=/dev/fedora/kcs020,format=raw,if=none,id=drive-virtio-disk0,cache=none,aio=native
+-device virtio-blk-pci,scsi=off,bus=pci.4,addr=0x0,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=2,write-cache=on
+-drive file=/home/allard/clone_vm/CentOS-7-x86_64-Minimal-1810.iso,format=raw,if=none,id=drive-sata0-0-0,media=cdrom,readonly=on
+-device ide-cd,bus=ide.0,drive=drive-sata0-0-0,id=sata0-0-0,bootindex=1
+-netdev tap,fd=36,id=hostnet0,vhost=on,vhostfd=37
+-device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:c0:a8:7a:14,bus=pci.1,addr=0x0
+-chardev pty,id=charserial0
+-device isa-serial,chardev=charserial0,id=serial0
+-chardev socket,id=charchannel0,fd=38,server,nowait
+-device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0
+-chardev spicevmc,id=charchannel1,name=vdagent
+-device virtserialport,bus=virtio-serial0.0,nr=2,chardev=charchannel1,id=channel1,name=com.redhat.spice.0
+-device usb-tablet,id=input0,bus=usb.0,port=1
+-spice port=5900,addr=127.0.0.1,disable-ticketing,image-compression=off,seamless-migration=on
+-device qxl-vga,id=video0,ram_size=67108864,vram_size=67108864,vram64_size_mb=0,vgamem_mb=16,max_outputs=1,bus=pcie.0,addr=0x1
+-device ich9-intel-hda,id=sound0,bus=pcie.0,addr=0x1b
+-device hda-duplex,id=sound0-codec0,bus=sound0.0,cad=0
+-chardev spicevmc,id=charredir0,name=usbredir
+-device usb-redir,chardev=charredir0,id=redir0,bus=usb.0,port=2
+-chardev spicevmc,id=charredir1,name=usbredir
+-device usb-redir,chardev=charredir1,id=redir1,bus=usb.0,port=3
+-device virtio-balloon-pci,id=balloon0,bus=pci.5,addr=0x0
+-object rng-random,id=objrng0,filename=/dev/urandom
+-device virtio-rng-pci,rng=objrng0,id=rng0,bus=pci.6,addr=0x0
+-sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny
+-msg timestamp=on
+
+/usr/bin/qemu-system-x86_64
+-machine accel=kvm
+-name guest=kcs020,debug-threads=on
+-S
+-object secret,id=masterKey0,format=raw,file=/var/lib/libvirt/qemu/domain-5-kcs020/master-key.aes
+-machine pc-q35-3.0,accel=kvm,usb=off,vmport=off,dump-guest-core=off
+-cpu Skylake-Client-IBRS,ss=on,vmx=on,hypervisor=on,tsc_adjust=on,clflushopt=on,ssbd=on,xsaves=on,pdpe1gb=on,hle=off,rtm=off
+-m 1024
+-realtime mlock=off
+-smp 1,sockets=1,cores=1,threads=1
+-uuid c0154163-95f2-44cc-aa89-67b8e4f26dfd
+-no-user-config
+-nodefaults
+-chardev socket,id=charmonitor,fd=34,server,nowait
+-mon chardev=charmonitor,id=monitor,mode=control
+-rtc base=utc,driftfix=slew
+-global kvm-pit.lost_tick_policy=delay
+-no-hpet
+-no-shutdown
+-global ICH9-LPC.disable_s3=1
+-global ICH9-LPC.disable_s4=1
+-boot strict=on
+-device pcie-root-port,port=0x10,chassis=1,id=pci.1,bus=pcie.0,multifunction=on,addr=0x2
+-device pcie-root-port,port=0x11,chassis=2,id=pci.2,bus=pcie.0,addr=0x2.0x1
+-device pcie-root-port,port=0x12,chassis=3,id=pci.3,bus=pcie.0,addr=0x2.0x2
+-device pcie-root-port,port=0x13,chassis=4,id=pci.4,bus=pcie.0,addr=0x2.0x3
+-device pcie-root-port,port=0x14,chassis=5,id=pci.5,bus=pcie.0,addr=0x2.0x4
+-device pcie-root-port,port=0x15,chassis=6,id=pci.6,bus=pcie.0,addr=0x2.0x5
+-device pcie-root-port,port=0x16,chassis=7,id=pci.7,bus=pcie.0,addr=0x2.0x6
+-device qemu-xhci,p2=15,p3=15,id=usb,bus=pci.2,addr=0x0
+-device virtio-serial-pci,id=virtio-serial0,bus=pci.3,addr=0x0
+-drive file=/dev/fedora/kcs020,format=raw,if=none,id=drive-virtio-disk0,cache=none,aio=native
+-device virtio-blk-pci,scsi=off,bus=pci.4,addr=0x0,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=1,write-cache=on
+-drive if=none,id=drive-sata0-0-0,media=cdrom,readonly=on
+-device ide-cd,bus=ide.0,drive=drive-sata0-0-0,id=sata0-0-0
+-netdev tap,fd=36,id=hostnet0,vhost=on,vhostfd=37
+-device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:c0:a8:7a:14,bus=pci.1,addr=0x0
+-chardev pty,id=charserial0
+-device isa-serial,chardev=charserial0,id=serial0
+-chardev socket,id=charchannel0,fd=38,server,nowait
+-device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0
+-chardev spicevmc,id=charchannel1,name=vdagent
+-device virtserialport,bus=virtio-serial0.0,nr=2,chardev=charchannel1,id=channel1,name=com.redhat.spice.0
+-device usb-tablet,id=input0,bus=usb.0,port=1
+-spice port=5900,addr=127.0.0.1,disable-ticketing,image-compression=off,seamless-migration=on
+-device qxl-vga,id=video0,ram_size=67108864,vram_size=67108864,vram64_size_mb=0,vgamem_mb=16,max_outputs=1,bus=pcie.0,addr=0x1
+-device ich9-intel-hda,id=sound0,bus=pcie.0,addr=0x1b
+-device hda-duplex,id=sound0-codec0,bus=sound0.0,cad=0
+-chardev spicevmc,id=charredir0,name=usbredir
+-device usb-redir,chardev=charredir0,id=redir0,bus=usb.0,port=2
+-chardev spicevmc,id=charredir1,name=usbredir
+-device usb-redir,chardev=charredir1,id=redir1,bus=usb.0,port=3
+-device virtio-balloon-pci,id=balloon0,bus=pci.5,addr=0x0
+-object rng-random,id=objrng0,filename=/dev/urandom
+-device virtio-rng-pci,rng=objrng0,id=rng0,bus=pci.6,addr=0x0
+-sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny
+-msg timestamp=on
+
+/usr/libexec/qemu-kvm
+-name kcs030
+-S
+-machine pc-i440fx-rhel7.0.0,accel=kvm,usb=off,dump-guest-core=off
+-cpu Skylake-Client-IBRS
+-m 1024
+-realtime mlock=off
+-smp 1,sockets=1,cores=1,threads=1
+-uuid 116953ca-6d04-464d-a65f-2356efc06497
+-display none
+-no-user-config
+-nodefaults
+-chardev socket,id=charmonitor,path=/var/lib/libvirt/qemu/domain-3-kcs030/monitor.sock,server,nowait
+-mon chardev=charmonitor,id=monitor,mode=control
+-rtc base=utc,driftfix=slew
+-global kvm-pit.lost_tick_policy=delay
+-no-hpet
+-no-shutdown
+-global PIIX4_PM.disable_s3=1
+-global PIIX4_PM.disable_s4=1
+-boot strict=on
+-device ich9-usb-ehci1,id=usb,bus=pci.0,addr=0x4.0x7
+-device ich9-usb-uhci1,masterbus=usb.0,firstport=0,bus=pci.0,multifunction=on,addr=0x4
+-device ich9-usb-uhci2,masterbus=usb.0,firstport=2,bus=pci.0,addr=0x4.0x1
+-device ich9-usb-uhci3,masterbus=usb.0,firstport=4,bus=pci.0,addr=0x4.0x2
+-device virtio-serial-pci,id=virtio-serial0,bus=pci.0,addr=0x5
+-drive file=/dev/os/kcs030,format=raw,if=none,id=drive-virtio-disk0,cache=none,aio=native
+-device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x6,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=1
+-drive if=none,id=drive-ide0-0-0,readonly=on
+-device ide-cd,bus=ide.0,unit=0,drive=drive-ide0-0-0,id=ide0-0-0
+-netdev tap,fd=28,id=hostnet0,vhost=on,vhostfd=30
+-device virtio-net-pci,netdev=hostnet0,id=net0,mac=52:54:c0:a8:7a:1e,bus=pci.0,addr=0x3
+-chardev pty,id=charserial0
+-device isa-serial,chardev=charserial0,id=serial0
+-chardev socket,id=charchannel0,path=/var/lib/libvirt/qemu/channel/target/domain-3-kcs030/org.qemu.guest_agent.0,server,nowait
+-device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0
+-device virtio-balloon-pci,id=balloon0,bus=pci.0,addr=0x7
+-object rng-random,id=objrng0,filename=/dev/urandom
+-device virtio-rng-pci,rng=objrng0,id=rng0,bus=pci.0,addr=0x8
+-msg timestamp=on
+
+We see differences between the 2 commands on the Fedora 29
+host and the 1 command on the CentOS 7 host. The machine
+type on the Fedora 29 host is pc-q35-3.0 and on the CentOS 7
+host it is pc-i440fx-rhel7.0.0.
+
+For more information on the machine types, see
+[libvirt_pci_hp]. For more information on the XML format of
+the domain specification, see [libvirt_domxml].
+
+It turns out that the older machine type,
+pc-i440fx-rhel7.0.0, has 31 hot pluggable devices on the PCI
+bus and the newer machine type, pc-q35-3.0, has a lot less.
+Per hot plug device a pcie-root-port controller must be
+configured on a VM with machine type pc-q35-3.0.
+
+So when we edit the XML file of a domain and add:
+
+  <devices>
+    .
+    .
+    <controller type='pci' index='7' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+      <target chassis='7' port='0xe'/>
+      <alias name='pci.7'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x6'/>
+    </controller>
+    .
+    .
+    <controller type='pci' model='pcie-root-port'/> <-- add
+    <controller type='pci' model='pcie-root-port'/> <-- add
+    .
+    .
+  </devices>
+
+Note that the controllers are not hot pluggable and can only
+be added by shutting down the VM and then do a "virsh edit
+domain".
+
+Logging in on the VM shows the new PCI bridges:
+
+# lspci
+00:00.0 Host bridge: Intel Corporation 82G33/G31/P35/P31 Express DRAM Controller
+00:01.0 PCI bridge: Red Hat, Inc. QEMU PCIe Root port
+00:01.1 PCI bridge: Red Hat, Inc. QEMU PCIe Root port
+00:01.2 PCI bridge: Red Hat, Inc. QEMU PCIe Root port
+00:01.3 PCI bridge: Red Hat, Inc. QEMU PCIe Root port
+00:01.4 PCI bridge: Red Hat, Inc. QEMU PCIe Root port
+00:01.5 PCI bridge: Red Hat, Inc. QEMU PCIe Root port
+00:01.6 PCI bridge: Red Hat, Inc. QEMU PCIe Root port
+00:01.7 PCI bridge: Red Hat, Inc. QEMU PCIe Root port <-- added
+00:02.0 PCI bridge: Red Hat, Inc. QEMU PCIe Root port <-- added
+00:1f.0 ISA bridge: Intel Corporation 82801IB (ICH9) LPC Interface Controller (rev 02)
+00:1f.2 SATA controller: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA Controller [AHCI mode] (rev 02)
+00:1f.3 SMBus: Intel Corporation 82801I (ICH9 Family) SMBus Controller (rev 02)
+01:00.0 Ethernet controller: Red Hat, Inc. Virtio network device (rev 01)
+02:00.0 USB controller: Red Hat, Inc. QEMU XHCI Host Controller (rev 01)
+03:00.0 Communication controller: Red Hat, Inc. Virtio console (rev 01)
+04:00.0 SCSI storage controller: Red Hat, Inc. Virtio block device (rev 01)
+05:00.0 Unclassified device [00ff]: Red Hat, Inc. Virtio memory balloon (rev 01)
+06:00.0 Unclassified device [00ff]: Red Hat, Inc. Virtio RNG (rev 01)
+
+The 00:01.7 and 00:02.0 ones are new. So by using this setup
+we can hotplug 3 extra disks.

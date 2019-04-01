@@ -1,0 +1,11 @@
+---
+
+# AB: TODO: figure out how we can set this parameter
+# dependent on the OS distribution type. For example with:
+# ansible -i localhost, localhost \
+#   -m setup -a 'filter=ansible_distribution'
+# Or, otherwise figure out how we can automatically find the
+# VG (Volume Group) to use, e.g. centos or fedora.
+# AB: the name of the VG used as the pool for KVM volumes.
+#attachtemplatedisk: centos
+attachtemplatedisk: fedora

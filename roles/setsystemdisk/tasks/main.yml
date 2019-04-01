@@ -3,13 +3,13 @@
 - block:
   - name: Determine if VM already has template system disk
     command: grep -q /dev/os/{{ inventory_hostname }} /etc/libvirt/qemu/{{ inventory_hostname }}.xml
-    register: has_domain_disk_info
+    register: _has_domain_disk_info
     changed_when: false
     failed_when: false
 
   - name: Change system disk of VM
     command: virt-xml {{ inventory_hostname }} --edit --disk path=/dev/os/tpl
-    when: has_domain_disk_info.rc == 0
+    when: _has_domain_disk_info.rc == 0
 
   become: True
   delegate_to: localhost

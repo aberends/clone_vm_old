@@ -9,6 +9,8 @@
     command: chroot /tmp/root grub2-install /dev/vdc
 
   - name: Make grub2 config
+    # AB: why do we need "sh -c" here? TODO: explain why it
+    # fails otherwise.
     shell: chroot /tmp/root sh -c 'grub2-mkconfig > /boot/grub2/grub.cfg'
 
   - name: Update filesystem table (fstab)
@@ -16,6 +18,8 @@
     # blkid as an embedded command.
     shell: chroot /tmp/root sed -i -e "s/UUID=[^ ]\+ /UUID=$(blkid /dev/vdc1 -o value -s UUID) /" -e 's#/[^-/]\+-root#/tpl-root#' -e 's#/[^-/]\+-swap#/tpl-swap#' /etc/fstab
 
+    # AB: why is autorelabel needed? TODO: explain how it
+    # fails otherwise.
   - name: Force SELinux relabel upon next boot
     command: chroot /tmp/root touch /.autorelabel
   become: True

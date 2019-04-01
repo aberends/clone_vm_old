@@ -11,38 +11,35 @@
     args:
       creates: ~/.ssh/id_rsa
 
-    # AB: we keep it simple here and just remove the host keys
-    # that match the inventory hostname. If facts are gathered
-    # we can also remove ansible_fqdn and
-    # ansible_default_ipv4['address'].
-    # TODO: figure out if we really do not need this task. If
-    # it is not needed, remove the commented out variant.
-  #- name: Remove old host key from known_hosts file
-  #  known_hosts:
-  #    name: "{{ inventory_hostname }}"
-  #    state: absent
-  #  delegate_to: localhost
-
+    # AB: here we do the assumption that all hosts in the
+    # inventory are also in the /etc/hosts file on the KVM
+    # host. If this is not the case, later roles may fail
+    # badly, i.e. stop the play. For example, if we ssh
+    # directly to the IPv4 address of the host and it is not
+    # in the /etc/hosts file, the old host key is still
+    # present in ~/.ssh/known_hosts file and the SSH
+    # connection to a new instance of the domain fails
+    # because of it.
   - name: Figure out if IPv4 based host key is present
     command: awk "/{{ inventory_hostname }}/ {print $1}" /etc/hosts
-    register: ipv4_host_key_info
+    register: _ipv4_host_info
     changed_when: false
 
   - name: Remove IPv4 based host key from known_hosts file
     known_hosts:
-      name: "{{ ipv4_host_key_info.stdout }}"
+      name: "{{ _ipv4_host_info.stdout }}"
       state: absent
 
   - name: Obtain new host key
     shell: ssh-keyscan -t ecdsa {{ inventory_hostname }}
-    register: host_key_info
+    register: _host_key_info
     changed_when: false
 
   - name: Add new host key to known_hosts file
     known_hosts:
       name: "{{ inventory_hostname }}"
       state: present
-      key: "{{ host_key_info.stdout }}"
+      key: "{{ _host_key_info.stdout }}"
   delegate_to: localhost
 
 - name: Enable pubkey login
@@ -50,5 +47,7 @@
     user: root
     state: present
     key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+  # AB: why do we need async and poll here? TODO: figure it
+  # out.
   async: 3
   poll: 1

@@ -1,0 +1,19 @@
+---
+
+# AB: to give the root disk some extra space to operate we
+# add some MiB to its calculated size.
+createtemplatedisk_add_root_mb: 100
+
+# AB: to give the boot disk some extra space to operate we
+# add some MiB to its calculated size.
+createtemplatedisk_add_boot_mb: 20
+
+# AB: TODO: figure out how we can set this parameter
+# dependent on the OS distribution type. For example with:
+# ansible -i localhost, localhost \
+#   -m setup -a 'filter=ansible_distribution'
+# Or, otherwise figure out how we can automatically find the
+# VG (Volume Group) to use, e.g. centos or fedora.
+# AB: the name of the VG used as the pool for KVM volumes.
+#createtemplatedisk_vg: centos
+createtemplatedisk_vg: fedora

@@ -1,0 +1,19 @@
+---
+
+# AB: the ISO and software are located in a certain
+# directory. The default value is set here.
+kickstartinstall_clone_vm_dir: '~/clone_vm'
+
+# AB: the glob pattern is consumed by the shell, so it must
+# adhere to the fnmatch(3) rules.
+kickstartinstall_iso_pattern: '*-x86_64-Minimal-*.iso'
+
+# AB: TODO: figure out how we can set this parameter
+# dependent on the OS distribution type. For example with:
+# ansible -i localhost, localhost \
+#   -m setup -a 'filter=ansible_distribution'
+# Or, otherwise figure out how we can automatically find the
+# VG (Volume Group) to use, e.g. centos or fedora.
+# AB: the name of the VG used as the pool for KVM volumes.
+#kickstartinstall_vg: centos
+kickstartinstall_vg: fedora

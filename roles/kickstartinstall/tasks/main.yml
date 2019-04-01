@@ -2,42 +2,48 @@
 
 - block:
   - name: Obtain path of Minimal ISO
-    shell: ls -1 ~/clone_vm/CentOS-7-x86_64-Minimal-*.iso | tail -n 1
-    register: iso_path_info
+    shell: ls -1 {{ kickstartinstall_clone_vm_dir }}/{{ kickstartinstall_iso_pattern}} | tail -n 1
+    register: _iso_path_info
     changed_when: false
 
+    # AB: we should add code to verify if the naming
+    # convention for the libvirt domain name is followed.
+    # The last part of the inventory_hostname must be a
+    # number in the range 2-254.
   - name: Calculate MAC address
     vars:
-      domain: "{{ inventory_hostname }}"
-      octet: "{{ domain | regex_replace('^...0*') }}"
+      octet: "{{ inventory_hostname | regex_replace('^...0*') }}"
     command: printf "52:54:%2.2x:%2.2x:%2.2x:%2.2x" 192 168 122 {{ octet }}
-    register: mac_info
+    register: _mac_info
     changed_when: false
 
   - name: Install VM with kickstart file
     vars:
-      domain: "{{ inventory_hostname }}"
-      home: "{{ lookup('env', 'HOME') }}"
-      iso_path: "{{ iso_path_info.stdout }}"
-      mac: "{{ mac_info.stdout }}"
+      iso_path: "{{ _iso_path_info.stdout }}"
+      mac: "{{ _mac_info.stdout }}"
+      abs_path_clone_vm_dir: "{{ kickstartinstall_clone_vm_dir|expanduser }}"
+    # AB: the '>' character is a yaml directive to tell the
+    # yaml parser that the block of lines need to be
+    # unfolded. In yaml parlance it is a folded block
+    # scalar. So the command value is just one long line.
     command: >
       virt-install
         --connect qemu:///system
-        --name={{ domain }}
+        --name={{ inventory_hostname }}
         --memory=1024
         --arch=x86_64
         --metadata=description="centos7.0 template"
         --vcpus=vcpus=1
         --location="{{ iso_path }}"
-        --extra-args="ks=file:/{{ domain }}.ks console=ttyS0,115200 inst.sshd"
-        --initrd-inject="{{ home }}/clone_vm/{{ domain }}.ks"
+        --extra-args="ks=file:/{{ inventory_hostname }}.ks console=ttyS0,115200 inst.sshd"
+        --initrd-inject="{{ abs_path_clone_vm_dir }}/{{ inventory_hostname }}.ks"
         --os-variant="centos7.0"
         --boot=hd
-        --disk=vol=os/{{ domain }},device=disk,bus=virtio
+        --disk=vol={{ kickstartinstall_vg }}/{{ inventory_hostname }},device=disk,bus=virtio
         --network=network=default,mac={{ mac }}
         --graphics=none
         --noautoconsole
         --hvm
         --autostart
-    become: True
+    become: true
   delegate_to: localhost

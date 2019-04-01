@@ -1,0 +1,22 @@
+---
+
+- block:
+  - name: Determine if machine type is pc-q35
+    command: grep -q pc-q35 /etc/libvirt/qemu/{{ inventory_hostname }}.xml
+    register: _is_q35_info
+    changed_when: false
+    failed_when: false
+
+    # AB: for the newer machine pc-q35, for example
+    # "pc-q35-3.0", we need to add an extra pcie-root-port
+    # controller. Otherwise we can only hotplug 1 extra
+    # disk, but we want to be able to add 2.
+    # TODO: we hardcoded the index because we found out that
+    # that the upper index of a newly create VM with
+    # virt-install is 7. So we put 8. Better is to obtain
+    # the maximum index number and add 1 to it.
+  - name: Add PCI express root port
+    command: virt-xml {{ inventory_hostname }} --add-device --controller type=pci,model=pcie-root-port,index=8
+    when: _is_q35_info.rc == 0
+  become: True
+  delegate_to: localhost
