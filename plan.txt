@@ -14,7 +14,7 @@ Allard Berends (AB)
 HISTORY
 
 Date with 'LC_TIME=en_US date +"\%d-\%b-\%Y \%H:\%M", '.
-10-Feb-2019 10:02, AB, start
+01-Apr-2019 20:19, AB, start
 
 
 REFERENCES
@@ -26,6 +26,7 @@ REFERENCES
 ABBREVIATIONS
 
 KVM               Kernel-based Virtual Machine
+VG                Volume Group
 
 
 TERMS
@@ -44,7 +45,7 @@ Create with:
 - exter "ex" mode by typing ':'
 - r !sed -n 's/^\([A-Z0-9][A-Z_0-9]*\)$/- \1/p' %:p
 
-- VIRTUALIZATION_WITH_KVM
+- TINY_KVM_FOR_CLONING
 - OBJECTIVE
 - AUTHOR
 - HISTORY
@@ -61,11 +62,52 @@ Create with:
 - UNATTENDED_CONFIGURATION_WITH_ANSIBLE
 
 
+KVM_HOST_PREREQUISITES
+
+We tested our cloning practise on a CentOS7 and a Fedora29
+host. The host is installed with a Minimal installation
+source and default partitioning is used. Meaning that it has
+at least the centos (CentOS7 case) or the fedora (Fedora29
+case) VG (Volume Group).
+
+This can be verified with:
+
+c7# pvs
+  PV         VG      Fmt  Attr PSize   PFree   
+  /dev/sda2  centos  lvm2 a--  697.63g <659.64g
+
+f29# pvs
+  PV             VG     Fmt  Attr PSize    PFree   
+  /dev/nvme0n1p3 fedora lvm2 a--   893.05g <549.85g
+
+Make sure that on the VG at least 10GiB is available to make
+the cloneable VM.
+
+We want to run with the latest updates, so, before we do
+anything else, we execute:
+
+#
+yum -y update
+reboot
+
+
 RPMS_AND_GROUPS_PREREQUISITES
 
 TODO: update the text in this section based on the
 information obtained within a clean installation on a
-CentOS7 host.
+CentOS7 and a Fedora29 host.
+
+We assume that the host (CentOS7 or Fedora29) is installed
+with a Minimal installation source. So, before we can run
+the create_tpl_vm.sh script which calls ansible-playbook, we
+need to install ansible:
+
+# yum -y install ansible
+
+In order to obtain the software to make the cloneable VM, we
+need git too:
+
+# yum -y install git
 
 We use the following commands:
 

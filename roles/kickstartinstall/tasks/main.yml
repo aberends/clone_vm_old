@@ -44,6 +44,5 @@
         --graphics=none
         --noautoconsole
         --hvm
-        --autostart
     become: true
   delegate_to: localhost

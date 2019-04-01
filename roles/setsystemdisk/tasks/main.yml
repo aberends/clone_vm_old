@@ -2,14 +2,23 @@
 
 - block:
   - name: Determine if VM already has template system disk
-    command: grep -q /dev/os/{{ inventory_hostname }} /etc/libvirt/qemu/{{ inventory_hostname }}.xml
+    command: grep -q /dev/{{ setsystemdisk_vg }}/t{{ inventory_hostname }} /etc/libvirt/qemu/{{ inventory_hostname }}.xml
     register: _has_domain_disk_info
     changed_when: false
     failed_when: false
 
   - name: Change system disk of VM
-    command: virt-xml {{ inventory_hostname }} --edit --disk path=/dev/os/tpl
-    when: _has_domain_disk_info.rc == 0
+    command: virt-xml {{ inventory_hostname }} --edit --disk path=/dev/{{ setsystemdisk_vg }}/t{{ inventory_hostname }}
+    when: _has_domain_disk_info.rc == 1
 
-  become: True
+  - name: Remove original system disk
+    command: virsh vol-delete {{ inventory_hostname }} {{ setsystemdisk_vg }}
+    args:
+      removes: /dev/{{ setsystemdisk_vg }}/{{ inventory_hostname }}
+
+  - name: Remove the data disk
+    command: virsh vol-delete d{{ inventory_hostname }} {{ setsystemdisk_vg }}
+    args:
+      removes: /dev/{{ setsystemdisk_vg }}/d{{ inventory_hostname }}
+  become: true
   delegate_to: localhost
