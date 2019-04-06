@@ -1,0 +1,187 @@
+VIRT_RESIZE_PROBLEM
+
+
+OBJECTIVE
+
+Describe what the problem is when resizing the system disk
+of a VM.
+
+
+AUTHOR
+
+Allard Berends (AB)
+
+
+HISTORY
+
+Date with 'LC_TIME=en_US date +"\%d-\%b-\%Y \%H:\%M", '.
+03-Apr-2019 20:16, AB, start
+
+
+REFERENCES
+
+[kvm_wp]          Kernel-based Virtual Machine,
+                  https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine
+
+[libvirt_pci_hp]  libvirt: PCI topology and hotplug,
+                  https://libvirt.org/pci-hotplug.html
+
+[libvirt_domxml]  libvirt: Domain XML format,
+                  https://libvirt.org/formatdomain.html
+
+
+ABBREVIATIONS
+
+KVM               Kernel-based Virtual Machine
+
+
+TERMS
+
+KVM               Kernel-based Virtual Machine (KVM) is a
+                  virtualization module in the Linux kernel
+                  that allows the kernel to function as a
+                  hypervisor. More information on [kvm_wp].
+
+
+SECTIONS
+
+Create with:
+- delete current entries
+- save file
+- exter "ex" mode by typing ':'
+- r !sed -n 's/^\([A-Z0-9][A-Z_0-9]*\)$/- \1/p' %:p
+
+
+GUESTFISH_AVAILABLE
+
+$ guestfish
+
+><fs> run
+><fs> available-all-groups 
+acl
+augeas
+blkdiscard
+blkdiscardzeroes
+btrfs
+extlinux
+f2fs
+fstrim
+gdisk
+grub
+hivex
+inotify
+journal
+ldm
+libtsk
+libyara
+linuxcaps
+linuxfsuuid
+linuxmodules
+linuxxattrs
+luks
+lvm2
+mdadm
+mknod
+ntfs3g
+ntfsprogs
+realpath
+rsync
+scrub
+selinux
+selinuxrelabel
+sleuthkit
+squashfs
+syslinux
+wipefs
+xfs
+xz
+zerofree
+
+
+REPRODUCE_PROBLEM
+
+We use Fedora29 as OS with KVM. The target system is a
+CentOS7 guest.
+
+f29# uname -a
+Linux nuc.home.org 5.0.5-200.fc29.x86_64 #1 SMP Wed Mar 27 20:58:04 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
+
+c7# uname -a
+Linux tpl003.home.org 3.10.0-957.el7.x86_64 #1 SMP Thu Nov 8 23:39:32 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
+
+# uname -a
+Linux tpl004.home.org 4.18.16-300.fc29.x86_64 #1 SMP Sat Oct 20 23:24:08 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
+
+# virsh list --all
+ Id   Name     State     
+-------------------------
+ -    tpl003   shut off
+
+#
+virsh destroy tst030
+virsh undefine tst030
+virsh vol-delete /dev/fedora/tst030
+virsh vol-create-as fedora tst030 5g
+virt-resize --resize /dev/sda1=500M --expand /dev/sda2 /dev/fedora/ttpl003 /dev/fedora/tst030
+virt-clone -o tpl003 -n tst030 -f /dev/fedora/tst030 --preserve-data --check all=off --mac 52:54:C0:A8:7A:1E
+virsh start tst030; virsh console tst030
+
+In the boot log you can see the following message that are
+out of line (normally not there):
+
+traps: lvm[1487] general protection ip:7f035196c01a sp:7ffdb7024878 error:0 in libc-2.17.so[7f035182e000+1c2000]ile System.
+
+[FAILED] Failed to start Monitoring of LVM2 ...ng dmeventd or progress polling.
+See 'systemctl status lvm2-monitor.service' for details.
+
+Starting Monitoring of LVM2 mirrors... dmeventd or progress polling...
+[    8.480557] lpc_ich 0000:00:1f.0: I/O space for GPIO uninitialized
+
+Starting LVM2 PV scan on device 252:2...
+[    8.508284] i801_smbus 0000:00:1f.3: SMBus using PCI interrupt
+[    8.537551] traps: lvm[2098] general protection ip:7f0be99e801a sp:7ffe9f8350f8 error:0 in libc-2.17.so[7f0be98aa000+1c2000]
+[FAILED] Failed to start Monitoring of LVM2 ...ng dmeventd or progress polling.
+See 'systemctl status lvm2-monitor.service' for details.
+[    8.576598] traps: lvm[2143] general protection ip:7f944c05701a sp:7ffebc629d68 error:0[    8.593882] input: PC Speaker as /devices/platform/pcspkr/input/input4
+ in libc-2.17.so[7f944bf19000+1c2000]
+[FAILED] Failed to start LVM2 PV scan on device 252:2.
+See 'systemctl status lvm2-pvscan@252:2.service' for details.
+
+We repeat the test with a Fedora29 guest.
+
+#
+virsh destroy tst031
+virsh undefine tst031
+virsh vol-delete /dev/fedora/tst031
+virsh vol-create-as fedora tst031 5g
+virt-resize --resize /dev/sda1=500M --expand /dev/sda2 /dev/fedora/ttpl004 /dev/fedora/tst031
+virt-clone -o tpl004 -n tst031 -f /dev/fedora/tst031 --preserve-data --check all=off --mac 52:54:C0:A8:7A:1F
+virsh start tst031; virsh console tst031
+
+The problems with LVM are not seen in the boot log in this
+case.
+
+We thing that the problem is that the pvresize operation in
+guestfish on Fedora 29 is not compatible with the pvresize
+operation on the CentOS 7 guest.
+
+VIRT_RESIZE_DEBUG
+
+We capture debug information with the -v option of
+virt-resize and store it in files.
+
+#
+virsh destroy tst030
+virsh undefine tst030
+virsh vol-delete /dev/fedora/tst030
+virsh vol-create-as fedora tst030 5g
+virt-resize --verbose --resize /dev/sda1=500M --expand /dev/sda2 /dev/fedora/ttpl003 /dev/fedora/tst030 > /home/allard/clone_vm/virt_resize_problem/tst030.stdout 2>/home/allard/clone_vm/virt_resize_problem/tst030.stderr
+virt-clone -o tpl003 -n tst030 -f /dev/fedora/tst030 --preserve-data --check all=off --mac 52:54:C0:A8:7A:1E
+
+#
+virsh destroy tst031
+virsh undefine tst031
+virsh vol-delete /dev/fedora/tst031
+virsh vol-create-as fedora tst031 5g
+virt-resize --verbose --resize /dev/sda1=500M --expand /dev/sda2 /dev/fedora/ttpl004 /dev/fedora/tst031 > /home/allard/clone_vm/virt_resize_problem/tst031.stdout 2>/home/allard/clone_vm/virt_resize_problem/tst031.stderr
+virt-clone -o tpl004 -n tst031 -f /dev/fedora/tst031 --preserve-data --check all=off --mac 52:54:C0:A8:7A:1F

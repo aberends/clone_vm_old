@@ -1,0 +1,2608 @@
+libguestfs: creating COW overlay to protect original drive content
+libguestfs: command: run: qemu-img --help | grep -sqE -- '\binfo\b.*-U\b'
+libguestfs: command: run: qemu-img
+libguestfs: command: run: \ info
+libguestfs: command: run: \ -U
+libguestfs: command: run: \ --output json
+libguestfs: command: run: \ /dev/fedora/ttpl003
+libguestfs: parse_json: qemu-img info JSON output:\n{\n    "virtual-size": 1296039936,\n    "filename": "/dev/fedora/ttpl003",\n    "format": "raw",\n    "actual-size": 0,\n    "dirty-flag": false\n}\n\n
+libguestfs: command: run: qemu-img
+libguestfs: command: run: \ create
+libguestfs: command: run: \ -f qcow2
+libguestfs: command: run: \ -o backing_file=/dev/dm-3,backing_fmt=raw
+libguestfs: command: run: \ /tmp/libguestfs7tAC4X/overlay1.qcow2
+Formatting '/tmp/libguestfs7tAC4X/overlay1.qcow2', fmt=qcow2 size=1296039936 backing_file=/dev/dm-3 backing_fmt=raw cluster_size=65536 lazy_refcounts=off refcount_bits=16
+libguestfs: launch: program=virt-resize
+libguestfs: launch: version=1.40.1fedora=29,release=2.fc29,libvirt
+libguestfs: launch: backend registered: unix
+libguestfs: launch: backend registered: uml
+libguestfs: launch: backend registered: libvirt
+libguestfs: launch: backend registered: direct
+libguestfs: launch: backend=libvirt
+libguestfs: launch: tmpdir=/tmp/libguestfs7tAC4X
+libguestfs: launch: umask=0022
+libguestfs: launch: euid=0
+libguestfs: libvirt version = 4007000 (4.7.0)
+libguestfs: guest random name = guestfs-m2i1tuy0k01cwkx2
+libguestfs: connect to libvirt
+libguestfs: opening libvirt handle: URI = qemu:///system, auth = default+wrapper, flags = 0
+libguestfs: successfully opened libvirt handle: conn = 0x5611309683c0
+libguestfs: qemu version (reported by libvirt) = 3000000 (3.0.0)
+libguestfs: get libvirt capabilities
+libguestfs: parsing capabilities XML
+libguestfs: build appliance
+libguestfs: begin building supermin appliance
+libguestfs: run supermin
+libguestfs: command: run: /usr/bin/supermin
+libguestfs: command: run: \ --build
+libguestfs: command: run: \ --verbose
+libguestfs: command: run: \ --if-newer
+libguestfs: command: run: \ --lock /var/tmp/.guestfs-0/lock
+libguestfs: command: run: \ --copy-kernel
+libguestfs: command: run: \ -f ext2
+libguestfs: command: run: \ --host-cpu x86_64
+libguestfs: command: run: \ /usr/lib64/guestfs/supermin.d
+libguestfs: command: run: \ -o /var/tmp/.guestfs-0/appliance.d
+supermin: version: 5.1.20
+supermin: rpm: detected RPM version 4.14
+supermin: package handler: fedora/rpm
+supermin: acquiring lock on /var/tmp/.guestfs-0/lock
+supermin: if-newer: output does not need rebuilding
+libguestfs: finished building supermin appliance
+libguestfs: command: run: qemu-img
+libguestfs: command: run: \ create
+libguestfs: command: run: \ -f qcow2
+libguestfs: command: run: \ -o backing_file=/var/tmp/.guestfs-0/appliance.d/root,backing_fmt=raw
+libguestfs: command: run: \ /tmp/libguestfs7tAC4X/overlay2.qcow2
+Formatting '/tmp/libguestfs7tAC4X/overlay2.qcow2', fmt=qcow2 size=4294967296 backing_file=/var/tmp/.guestfs-0/appliance.d/root backing_fmt=raw cluster_size=65536 lazy_refcounts=off refcount_bits=16
+libguestfs: create libvirt XML
+libguestfs: command: run: qemu-img
+libguestfs: command: run: \ info
+libguestfs: command: run: \ -U
+libguestfs: command: run: \ --output json
+libguestfs: command: run: \ /dev/fedora/tst030
+libguestfs: parse_json: qemu-img info JSON output:\n{\n    "virtual-size": 5368709120,\n    "filename": "/dev/fedora/tst030",\n    "format": "raw",\n    "actual-size": 0,\n    "dirty-flag": false\n}\n\n
+libguestfs: libvirt XML:\n<?xml version="1.0"?>\n<domain type="kvm" xmlns:qemu="http://libvirt.org/schemas/domain/qemu/1.0">\n  <name>guestfs-m2i1tuy0k01cwkx2</name>\n  <memory unit="MiB">768</memory>\n  <currentMemory unit="MiB">768</currentMemory>\n  <cpu mode="host-passthrough">\n    <model fallback="allow"/>\n  </cpu>\n  <vcpu>1</vcpu>\n  <clock offset="utc">\n    <timer name="rtc" tickpolicy="catchup"/>\n    <timer name="pit" tickpolicy="delay"/>\n    <timer name="hpet" present="no"/>\n  </clock>\n  <os>\n    <type>hvm</type>\n    <kernel>/var/tmp/.guestfs-0/appliance.d/kernel</kernel>\n    <initrd>/var/tmp/.guestfs-0/appliance.d/initrd</initrd>\n    <cmdline>panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdc selinux=0 guestfs_verbose=1 TERM=xterm-256color</cmdline>\n    <bios useserial="yes"/>\n  </os>\n  <on_reboot>destroy</on_reboot>\n  <devices>\n    <rng model="virtio">\n      <backend model="random">/dev/urandom</backend>\n    </rng>\n    <controller type="scsi" index="0" model="virtio-scsi"/>\n    <disk device="disk" type="file">\n      <source file="/tmp/libguestfs7tAC4X/overlay1.qcow2"/>\n      <target dev="sda" bus="scsi"/>\n      <driver name="qemu" type="qcow2" cache="unsafe"/>\n      <address type="drive" controller="0" bus="0" target="0" unit="0"/>\n    </disk>\n    <disk device="disk" type="block">\n      <source dev="/dev/fedora/tst030"/>\n      <target dev="sdb" bus="scsi"/>\n      <driver name="qemu" type="raw" cache="unsafe"/>\n      <address type="drive" controller="0" bus="0" target="1" unit="0"/>\n    </disk>\n    <disk type="file" device="disk">\n      <source file="/tmp/libguestfs7tAC4X/overlay2.qcow2"/>\n      <target dev="sdc" bus="scsi"/>\n      <driver name="qemu" type="qcow2" cache="unsafe"/>\n      <address type="drive" controller="0" bus="0" target="2" unit="0"/>\n    </disk>\n    <serial type="unix">\n      <source mode="connect" path="/tmp/libguestfsQZybdO/console.sock"/>\n      <target port="0"/>\n    </serial>\n    <channel type="unix">\n      <source mode="connect" path="/tmp/libguestfsQZybdO/guestfsd.sock"/>\n      <target type="virtio" name="org.libguestfs.channel.0"/>\n    </channel>\n    <controller type="usb" model="none"/>\n    <memballoon model="none"/>\n  </devices>\n  <qemu:commandline>\n    <qemu:env name="TMPDIR" value="/var/tmp"/>\n  </qemu:commandline>\n</domain>\n
+libguestfs: command: run: ls
+libguestfs: command: run: \ -a
+libguestfs: command: run: \ -l
+libguestfs: command: run: \ -R
+libguestfs: command: run: \ -Z /var/tmp/.guestfs-0
+libguestfs: /var/tmp/.guestfs-0:
+libguestfs: total 4
+libguestfs: drwxr-xr-x.  3 root root unconfined_u:object_r:user_tmp_t:s0   37 Apr  6 13:55 .
+libguestfs: drwxrwxrwt. 13 root root system_u:object_r:tmp_t:s0          4096 Apr  6 13:55 ..
+libguestfs: drwxr-xr-x.  2 root root unconfined_u:object_r:user_tmp_t:s0   46 Apr  6 11:18 appliance.d
+libguestfs: -rw-r--r--.  1 root root unconfined_u:object_r:user_tmp_t:s0    0 Apr  2 19:24 lock
+libguestfs: 
+libguestfs: /var/tmp/.guestfs-0/appliance.d:
+libguestfs: total 420752
+libguestfs: drwxr-xr-x. 2 root root unconfined_u:object_r:user_tmp_t:s0         46 Apr  6 11:18 .
+libguestfs: drwxr-xr-x. 3 root root unconfined_u:object_r:user_tmp_t:s0         37 Apr  6 13:55 ..
+libguestfs: -rw-r--r--. 1 qemu qemu system_u:object_r:virt_content_t:s0     820736 Apr  6 13:55 initrd
+libguestfs: -rwxr-xr-x. 1 qemu qemu system_u:object_r:virt_content_t:s0    9720008 Apr  6 13:55 kernel
+libguestfs: -rw-r--r--. 1 qemu qemu system_u:object_r:virt_content_t:s0 4294967296 Apr  6 13:55 root
+libguestfs: command: run: ls
+libguestfs: command: run: \ -a
+libguestfs: command: run: \ -l
+libguestfs: command: run: \ -Z /tmp/libguestfsQZybdO
+libguestfs: total 0
+libguestfs: drwxr-xr-x.  2 root root unconfined_u:object_r:user_tmp_t:s0  80 Apr  6 13:55 .
+libguestfs: drwxrwxrwt. 24 root root system_u:object_r:tmp_t:s0          520 Apr  6 13:55 ..
+libguestfs: srw-rw----.  1 root qemu unconfined_u:object_r:user_tmp_t:s0   0 Apr  6 13:55 console.sock
+libguestfs: srw-rw----.  1 root qemu unconfined_u:object_r:user_tmp_t:s0   0 Apr  6 13:55 guestfsd.sock
+libguestfs: launch libvirt guest
+libguestfs: responding to serial console Device Status Report
+\x1b[1;256r\x1b[256;256H\x1b[6n
+Google, Inc.
+Serial Graphics Adapter 07/31/18
+SGABIOS $Id$ (mockbuild@) Tue Jul 31 15:44:07 UTC 2018
+Term: 80x24
+4 0
+\x1b[2JSeaBIOS (version ?-20180724_192412-buildhw-07.phx2.fedoraproject.org-1.fc29)
+Machine UUID 0f10682a-934e-41e3-9f7c-ee5facf9a98d
+Booting from ROM...
+\x1b[2J[    0.000000] Linux version 5.0.5-200.fc29.x86_64+debug (mockbuild@bkernel04.phx2.fedoraproject.org) (gcc version 8.3.1 20190223 (Red Hat 8.3.1-2) (GCC)) #1 SMP Wed Mar 27 20:38:00 UTC 2019
+[    0.000000] Command line: panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdc selinux=0 guestfs_verbose=1 TERM=xterm-256color
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x002: 'SSE registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x004: 'AVX registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x008: 'MPX bounds registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x010: 'MPX CSR'
+[    0.000000] x86/fpu: xstate_offset[2]:  576, xstate_sizes[2]:  256
+[    0.000000] x86/fpu: xstate_offset[3]:  832, xstate_sizes[3]:   64
+[    0.000000] x86/fpu: xstate_offset[4]:  896, xstate_sizes[4]:   64
+[    0.000000] x86/fpu: Enabled xstate features 0x1f, context size is 960 bytes, using 'compacted' format.
+[    0.000000] BIOS-provided physical RAM map:
+[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x000000000009f7ff] usable
+[    0.000000] BIOS-e820: [mem 0x000000000009f800-0x000000000009ffff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000000f0000-0x00000000000fffff] reserved
+[    0.000000] BIOS-e820: [mem 0x0000000000100000-0x000000002fffdfff] usable
+[    0.000000] BIOS-e820: [mem 0x000000002fffe000-0x000000002fffffff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000feffc000-0x00000000feffffff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000fffc0000-0x00000000ffffffff] reserved
+[    0.000000] NX (Execute Disable) protection: active
+[    0.000000] SMBIOS 2.8 present.
+[    0.000000] DMI: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20180724_192412-buildhw-07.phx2.fedoraproject.org-1.fc29 04/01/2014
+[    0.000000] Hypervisor detected: KVM
+[    0.000000] kvm-clock: Using msrs 4b564d01 and 4b564d00
+[    0.000000] kvm-clock: cpu 0, msr d201001, primary cpu clock
+[    0.000000] kvm-clock: using sched offset of 136954916 cycles
+[    0.000003] clocksource: kvm-clock: mask: 0xffffffffffffffff max_cycles: 0x1cd42e4dffb, max_idle_ns: 881590591483 ns
+[    0.000008] tsc: Detected 2304.000 MHz processor
+[    0.000585] last_pfn = 0x2fffe max_arch_pfn = 0x400000000
+[    0.000633] x86/PAT: Configuration [0-7]: WB  WC  UC- UC  WB  WP  UC- WT  
+[    0.003866] found SMP MP-table at [mem 0x000f5d10-0x000f5d1f] mapped at [(____ptrval____)]
+[    0.003968] check: Scanning 1 areas for low memory corruption
+[    0.003996] Using GB pages for direct mapping
+[    0.004113] RAMDISK: [mem 0x2ff27000-0x2ffeffff]
+[    0.004132] ACPI: Early table checksum verification disabled
+[    0.004181] ACPI BIOS Error (bug): A valid RSDP was not found (20181213/tbxfroot-210)
+[    0.004432] No NUMA configuration found
+[    0.004434] Faking a node at [mem 0x0000000000000000-0x000000002fffdfff]
+[    0.004441] NODE_DATA(0) allocated [mem 0x2fefc000-0x2ff26fff]
+[    0.005866] Zone ranges:
+[    0.005869]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+[    0.005871]   DMA32    [mem 0x0000000001000000-0x000000002fffdfff]
+[    0.005873]   Normal   empty
+[    0.005875]   Device   empty
+[    0.005877] Movable zone start for each node
+[    0.005880] Early memory node ranges
+[    0.005882]   node   0: [mem 0x0000000000001000-0x000000000009efff]
+[    0.005884]   node   0: [mem 0x0000000000100000-0x000000002fffdfff]
+[    0.005887] Zeroed struct page in unavailable ranges: 98 pages
+[    0.005888] Initmem setup node 0 [mem 0x0000000000001000-0x000000002fffdfff]
+[    0.009755] SFI: Simple Firmware Interface v0.81 http://simplefirmware.org
+[    0.009788] Intel MultiProcessor Specification v1.4
+[    0.009790] MPTABLE: OEM ID: BOCHSCPU
+[    0.009792] MPTABLE: Product ID: 0.1         
+[    0.009794] MPTABLE: APIC at: 0xFEE00000
+[    0.009811] Processor #0 (Bootup-CPU)
+[    0.009845] IOAPIC[0]: apic_id 0, version 17, address 0xfec00000, GSI 0-23
+[    0.009847] Processors: 1
+[    0.009852] smpboot: Allowing 1 CPUs, 0 hotplug CPUs
+[    0.009875] PM: Registered nosave memory: [mem 0x00000000-0x00000fff]
+[    0.009877] PM: Registered nosave memory: [mem 0x0009f000-0x0009ffff]
+[    0.009879] PM: Registered nosave memory: [mem 0x000a0000-0x000effff]
+[    0.009880] PM: Registered nosave memory: [mem 0x000f0000-0x000fffff]
+[    0.009884] [mem 0x30000000-0xfeffbfff] available for PCI devices
+[    0.009886] Booting paravirtualized kernel on KVM
+[    0.009890] clocksource: refined-jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1910969940391419 ns
+[    0.089173] random: get_random_bytes called from start_kernel+0x9d/0x547 with crng_init=0
+[    0.089182] setup_percpu: NR_CPUS:8192 nr_cpumask_bits:1 nr_cpu_ids:1 nr_node_ids:1
+[    0.089504] percpu: Embedded 494 pages/cpu @(____ptrval____) s1986560 r8192 d28672 u2097152
+[    0.089542] KVM setup async PF for cpu 0
+[    0.089548] kvm-stealtime: cpu 0, msr 2efe4040
+[    0.089555] Built 1 zonelists, mobility grouping on.  Total pages: 193415
+[    0.089557] Policy zone: DMA32
+[    0.089561] Kernel command line: panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdc selinux=0 guestfs_verbose=1 TERM=xterm-256color
+[    0.117389] Memory: 716316K/786032K available (14339K kernel code, 3224K rwdata, 4500K rodata, 4872K init, 18620K bss, 69716K reserved, 0K cma-reserved)
+[    0.117738] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.117854] Kernel/User page tables isolation: enabled
+[    0.117884] ftrace: allocating 39322 entries in 154 pages
+[    0.128849] Running RCU self tests
+[    0.128853] rcu: Hierarchical RCU implementation.
+[    0.128855] rcu: \tRCU lockdep checking is enabled.
+[    0.128856] rcu: \tRCU restricting CPUs from NR_CPUS=8192 to nr_cpu_ids=1.
+[    0.128858] rcu: \tRCU callback double-/use-after-free debug enabled.
+[    0.128860] \tTasks RCU enabled.
+[    0.128862] rcu: RCU calculated value of scheduler-enlistment delay is 100 jiffies.
+[    0.128863] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=1
+[    0.131171] NR_IRQS: 524544, nr_irqs: 256, preallocated irqs: 16
+[    0.131563] Console: colour *CGA 80x25
+[    0.184684] printk: console [ttyS0] enabled
+[    0.185060] Lock dependency validator: Copyright (c) 2006 Red Hat, Inc., Ingo Molnar
+[    0.185765] ... MAX_LOCKDEP_SUBCLASSES:  8
+[    0.186132] ... MAX_LOCK_DEPTH:          48
+[    0.186527] ... MAX_LOCKDEP_KEYS:        8191
+[    0.186919] ... CLASSHASH_SIZE:          4096
+[    0.187309] ... MAX_LOCKDEP_ENTRIES:     32768
+[    0.187725] ... MAX_LOCKDEP_CHAINS:      65536
+[    0.188121] ... CHAINHASH_SIZE:          32768
+[    0.188539]  memory used by lock dependency info: 7775 kB
+[    0.189020]  per task-struct memory footprint: 2688 bytes
+[    0.189509] kmemleak: Kernel memory leak detector disabled
+[    0.190130] APIC: Switch to symmetric I/O mode setup
+[    0.191035] x2apic enabled
+[    0.191557] Switched APIC routing to physical x2apic.
+[    0.193013] ..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
+[    0.193570] clocksource: tsc-early: mask: 0xffffffffffffffff max_cycles: 0x2135f7c97c8, max_idle_ns: 440795273205 ns
+[    0.194523] Calibrating delay loop (skipped) preset value.. 4608.00 BogoMIPS (lpj=2304000)
+[    0.195513] pid_max: default: 32768 minimum: 301
+[    0.195975] LSM: Security Framework initializing
+[    0.196513] Yama: becoming mindful.
+[    0.196850] SELinux:  Disabled at boot.
+[    0.197512] Dentry cache hash table entries: 131072 (order: 8, 1048576 bytes)
+[    0.198261] Inode-cache hash table entries: 65536 (order: 7, 524288 bytes)
+[    0.198527] Mount-cache hash table entries: 2048 (order: 2, 16384 bytes)
+[    0.199515] Mountpoint-cache hash table entries: 2048 (order: 2, 16384 bytes)
+[    0.201126] Disabling memory control group subsystem
+[    0.201609] x86/cpu: User Mode Instruction Prevention (UMIP) activated
+[    0.202200] mce: CPU supports 10 MCE banks
+[    0.202556] Last level iTLB entries: 4KB 0, 2MB 0, 4MB 0
+[    0.203027] Last level dTLB entries: 4KB 0, 2MB 0, 4MB 0, 1GB 0
+[    0.203514] Spectre V2 : Mitigation: Full generic retpoline
+[    0.203998] Spectre V2 : Spectre v2 / SpectreRSB mitigation: Filling RSB on context switch
+[    0.204512] Spectre V2 : Enabling Restricted Speculation for firmware calls
+[    0.205518] Spectre V2 : mitigation: Enabling conditional Indirect Branch Prediction Barrier
+[    0.206271] Speculative Store Bypass: Mitigation: Speculative Store Bypass disabled via prctl and seccomp
+[    0.212809] Freeing SMP alternatives memory: 32K
+[    0.214110] smpboot: CPU0: Intel(R) Core(TM) i5-8259U CPU @ 2.30GHz (family: 0x6, model: 0x8e, stepping: 0xa)
+[    0.214800] Performance Events: Skylake events, Intel PMU driver.
+[    0.215375] ... version:                2
+[    0.215515] ... bit width:              48
+[    0.215901] ... generic registers:      4
+[    0.216259] ... value mask:             0000ffffffffffff
+[    0.216515] ... max period:             000000007fffffff
+[    0.217001] ... fixed-purpose events:   3
+[    0.217356] ... event mask:             000000070000000f
+[    0.217613] rcu: Hierarchical SRCU implementation.
+[    0.218720] random: crng done (trusting CPU's manufacturer)
+[    0.219409] smp: Bringing up secondary CPUs ...
+[    0.219539] smp: Brought up 1 node, 1 CPU
+[    0.219901] smpboot: Max logical packages: 1
+[    0.220283] smpboot: Total of 1 processors activated (4608.00 BogoMIPS)
+[    0.221032] devtmpfs: initialized
+[    0.221576] x86/mm: Memory block size: 128MB
+[    0.225196] DMA-API: preallocated 65548 debug entries
+[    0.225517] DMA-API: debugging enabled by kernel config
+[    0.225978] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275000 ns
+[    0.226580] futex hash table entries: 256 (order: 3, 32768 bytes)
+[    0.227319] pinctrl core: initialized pinctrl subsystem
+[    0.227810] 
+[    0.227962] *************************************************************
+[    0.228515] **     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **
+[    0.229135] **                                                         **
+[    0.229515] **  IOMMU DebugFS SUPPORT HAS BEEN ENABLED IN THIS KERNEL  **
+[    0.230120] **                                                         **
+[    0.230514] ** This means that this kernel is built to expose internal **
+[    0.231128] ** IOMMU data structures, which may compromise security on **
+[    0.231514] ** your system.                                            **
+[    0.232127] **                                                         **
+[    0.232514] ** If you see this message and you are not debugging the   **
+[    0.233108] ** kernel, report this immediately to your vendor!         **
+[    0.233514] **                                                         **
+[    0.234106] **     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **
+[    0.234514] *************************************************************
+[    0.235164] RTC time: 11:55:49, date: 2019-04-06
+[    0.235771] NET: Registered protocol family 16
+[    0.236539] audit: initializing netlink subsys (disabled)
+[    0.237327] cpuidle: using governor menu
+[    0.237628] KVM setup pv remote TLB flush
+[    0.238156] PCI: Using configuration type 1 for base access
+[    0.239536] audit: type=2000 audit(1554551749.421:1): state=initialized audit_enabled=0 res=1
+[    0.244265] HugeTLB registered 1.00 GiB page size, pre-allocated 0 pages
+[    0.244519] HugeTLB registered 2.00 MiB page size, pre-allocated 0 pages
+[    0.245376] cryptd: max_cpu_qlen set to 1000
+[    0.245910] ACPI: Interpreter disabled.
+[    0.246592] vgaarb: loaded
+[    0.247079] SCSI subsystem initialized
+[    0.247614] usbcore: USB support disabled
+[    0.248048] pps_core: LinuxPPS API ver. 1 registered
+[    0.248515] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.249338] PTP clock support registered
+[    0.249583] EDAC MC: Ver: 3.0.0
+[    0.250068] PCI: Probing PCI hardware
+[    0.250568] PCI host bridge to bus 0000:00
+[    0.250934] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    0.251516] pci_bus 0000:00: root bus resource [mem 0x00000000-0xffffffffff]
+[    0.252141] pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+[    0.255231] pci 0000:00:01.1: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
+[    0.255516] pci 0000:00:01.1: legacy IDE quirk: reg 0x14: [io  0x03f6]
+[    0.256183] pci 0000:00:01.1: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
+[    0.256516] pci 0000:00:01.1: legacy IDE quirk: reg 0x1c: [io  0x0376]
+[    0.269074] pci 0000:00:01.0: PIIX/ICH IRQ router [8086:7000]
+[    0.269968] NetLabel: Initializing
+[    0.270296] NetLabel:  domain hash size = 128
+[    0.270515] NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+[    0.271063] NetLabel:  unlabeled traffic allowed by default
+[    0.271730] clocksource: Switched to clocksource kvm-clock
+[    0.312400] VFS: Disk quotas dquot_6.6.0
+[    0.312833] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    0.313664] pnp: PnP ACPI: disabled
+[    0.317418] NET: Registered protocol family 2
+[    0.318235] tcp_listen_portaddr_hash hash table entries: 512 (order: 3, 45056 bytes)
+[    0.318964] TCP established hash table entries: 8192 (order: 4, 65536 bytes)
+[    0.319684] TCP bind hash table entries: 8192 (order: 7, 655360 bytes)
+[    0.320567] TCP: Hash tables configured (established 8192 bind 8192)
+[    0.321192] UDP hash table entries: 512 (order: 4, 98304 bytes)
+[    0.321760] UDP-Lite hash table entries: 512 (order: 4, 98304 bytes)
+[    0.322401] NET: Registered protocol family 1
+[    0.322804] NET: Registered protocol family 44
+[    0.323214] pci 0000:00:01.0: PIIX3: Enabling Passive Release
+[    0.323736] pci 0000:00:00.0: Limiting direct PCI/PCI transfers
+[    0.324267] pci 0000:00:01.0: Activating ISA DMA hang workarounds
+[    0.324960] Unpacking initramfs...
+[    0.326796] Freeing initrd memory: 804K
+[    0.327219] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x2135f7c97c8, max_idle_ns: 440795273205 ns
+[    0.328165] platform rtc_cmos: registered platform RTC device (no PNP device found)
+[    0.329216] check: Scanning for low memory corruption every 60 seconds
+[    0.329973] alg: self-tests disabled
+[    0.330417] cryptomgr_test (33) used greatest stack depth: 14872 bytes left
+[    0.331227] kworker/u2:0 (35) used greatest stack depth: 14040 bytes left
+[    0.332844] Initialise system trusted keyrings
+[    0.333309] Key type blacklist registered
+[    0.333741] workingset: timestamp_bits=36 max_order=18 bucket_order=0
+[    0.339177] zbud: loaded
+[    0.340939] Platform Keyring initialized
+[    0.341667] kworker/u2:0 (41) used greatest stack depth: 13224 bytes left
+[    0.348197] NET: Registered protocol family 38
+[    0.348762] Key type asymmetric registered
+[    0.349145] Asymmetric key parser 'x509' registered
+[    0.349607] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 242)
+[    0.350339] io scheduler mq-deadline registered
+[    0.351375] atomic64_test: passed for x86-64 platform with CX8 and with SSE
+[    0.352217] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+[    0.353102] virtio-pci 0000:00:02.0: PCI->APIC IRQ transform: INT A -> IRQ 10
+[    0.354631] virtio-pci 0000:00:03.0: PCI->APIC IRQ transform: INT A -> IRQ 11
+[    0.356266] virtio-pci 0000:00:04.0: PCI->APIC IRQ transform: INT A -> IRQ 11
+[    0.357875] Serial: 8250/16550 driver, 1 ports, IRQ sharing enabled
+[    0.381008] serial8250: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+[    0.382565] Non-volatile memory driver v1.3
+[    0.383595] Linux agpgart interface v0.103
+[    0.385758] scsi host0: ata_piix
+[    0.386550] scsi host1: ata_piix
+[    0.386914] ata1: PATA max MWDMA2 cmd 0x1f0 ctl 0x3f6 bmdma 0xc0a0 irq 14
+[    0.387520] ata2: PATA max MWDMA2 cmd 0x170 ctl 0x376 bmdma 0xc0a8 irq 15
+[    0.388266] libphy: Fixed MDIO Bus: probed
+[    0.389153] usbserial: usb_serial_init - registering generic driver failed
+[    0.389800] usbserial: usb_serial_init - returning with error -19
+[    0.390381] i8042: PNP: No PS/2 controller found.
+[    0.390808] i8042: Probing ports directly.
+[    0.391913] serio: i8042 KBD port at 0x60,0x64 irq 1
+[    0.392402] serio: i8042 AUX port at 0x60,0x64 irq 12
+[    0.393125] mousedev: PS/2 mouse device common for all mice
+[    0.394382] input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input0
+[    0.396201] input: VirtualPS/2 VMware VMMouse as /devices/platform/i8042/serio1/input/input3
+[    0.397055] rtc_cmos rtc_cmos: registered as rtc0
+[    0.397520] rtc_cmos rtc_cmos: alarms up to one day, 114 bytes nvram
+[    0.398207] device-mapper: uevent: version 1.0.3
+[    0.398761] device-mapper: ioctl: 4.39.0-ioctl (2018-04-03) initialised: dm-devel@redhat.com
+[    0.399840] input: VirtualPS/2 VMware VMMouse as /devices/platform/i8042/serio1/input/input2
+[    0.401122] hidraw: raw HID events driver (C) Jiri Kosina
+[    0.401743] drop_monitor: Initializing network drop monitor service
+[    0.402627] Initializing XFRM netlink socket
+[    0.403270] NET: Registered protocol family 10
+[    0.404929] Segment Routing with IPv6
+[    0.405288] mip6: Mobile IPv6
+[    0.405584] NET: Registered protocol family 17
+[    0.407147] RAS: Correctable Errors collector initialized.
+[    0.407746] AVX2 version of gcm_enc/dec engaged.
+[    0.408217] AES CTR mode by8 optimization enabled
+[    0.410296] sched_clock: Marking stable (350358910, 59155265)->(416788608, -7274433)
+[    0.411356] registered taskstats version 1
+[    0.411848] Loading compiled-in X.509 certificates
+[    0.413197] Loaded X.509 cert 'Fedora kernel signing key: 92196349c27ee4628955cd38a49478188bcda5ca'
+[    0.414107] zswap: loaded using pool lzo/zbud
+[    0.415312] Key type big_key registered
+[    0.415963] Key type encrypted registered
+[    0.416347] ima: No TPM chip found, activating TPM-bypass!
+[    0.416846] ima: Allocated hash algorithm: sha1
+[    0.417263] No architecture policies found
+[    0.418287]   Magic number: 15:493:933
+[    0.418875] rtc_cmos rtc_cmos: setting system clock to 2019-04-06T11:55:49 UTC (1554551749)
+[    0.570847] Freeing unused decrypted memory: 2040K
+[    0.577280] Freeing unused kernel image memory: 4872K
+[    0.579396] Write protecting the kernel read-only data: 22528k
+[    0.584737] Freeing unused kernel image memory: 2036K
+[    0.588230] Freeing unused kernel image memory: 1644K
+[    0.604141] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    0.605139] rodata_test: all tests were successful
+[    0.605853] x86/mm: Checking user space page tables
+[    0.614905] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    0.615632] Run /init as init process
+supermin: mounting /proc
+supermin: ext2 mini initrd starting up: 5.1.20 dietlibc
+supermin: cmdline: panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdc selinux=0 guestfs_verbose=1 TERM=xterm-256color
+supermin: uptime: 0.56 0.15
+supermin: mounting /sys
+supermin: internal insmod crc32-pclmul.ko
+supermin: internal insmod crc32c-intel.ko
+supermin: internal insmod crct10dif-pclmul.ko
+supermin: internal insmod crc32_generic.ko
+supermin: internal insmod nfit.ko
+insmod: init_module: nfit.ko: No such device
+supermin: internal insmod virtio_blk.ko
+supermin: internal insmod virtio_console.ko
+supermin: internal insmod crypto_engine.ko
+supermin: internal insmod virtio_crypto.ko
+supermin: internal insmod failover.ko
+supermin: internal insmod net_failover.ko
+supermin: internal insmod virtio_net.ko
+supermin: internal insmod nd_btt.ko
+supermin: internal insmod nd_pmem.ko
+supermin: internal insmod rpmsg_core.ko
+supermin: internal insmod virtio_rpmsg_bus.ko
+supermin: internal insmod virtio_scsi.ko
+[    0.654588] scsi host2: Virtio SCSI HBA
+[    0.656415] scsi 2:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    0.658198] scsi 2:0:1:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    0.659626] scsi 2:0:2:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    0.791240] sd 2:0:0:0: Power-on or device reset occurred
+[    0.792210] sd 2:0:0:0: Attached scsi generic sg0 type 0
+[    0.792975] sd 2:0:0:0: [sda] 2531328 512-byte logical blocks: (1.30 GB/1.21 GiB)
+[    0.793821] sd 2:0:0:0: [sda] Write Protect is off
+[    0.794564] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    0.795795] sd 2:0:1:0: Power-on or device reset occurred
+[    0.796338] sd 2:0:0:0: [sda] Optimal transfer size 0 bytes < PAGE_SIZE (4096 bytes)
+[    0.797774] sd 2:0:1:0: [sdb] 10485760 512-byte logical blocks: (5.37 GB/5.00 GiB)
+[    0.798580] sd 2:0:1:0: [sdb] Write Protect is off
+[    0.799164] sd 2:0:1:0: Attached scsi generic sg1 type 0
+[    0.799722] sd 2:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    0.800759] sd 2:0:1:0: [sdb] Optimal transfer size 0 bytes < PAGE_SIZE (4096 bytes)
+[    0.802173] sd 2:0:2:0: Attached scsi generic sg2 type 0
+[    0.802921] sd 2:0:2:0: Power-on or device reset occurred
+[    0.803777]  sda: sda1 sda2
+[    0.806091] sd 2:0:0:0: [sda] Attached SCSI disk
+[    0.806616] sd 2:0:2:0: [sdc] 8388608 512-byte logical blocks: (4.29 GB/4.00 GiB)
+[    0.807421] sd 2:0:2:0: [sdc] Write Protect is off
+[    0.808023] sd 2:0:2:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    0.808985] sd 2:0:1:0: [sdb] Attached SCSI disk
+[    0.809610] sd 2:0:2:0: [sdc] Optimal transfer size 0 bytes < PAGE_SIZE (4096 bytes)
+[    0.812132] sd 2:0:2:0: [sdc] Attached SCSI disk
+supermin: internal insmod virtio_balloon.ko
+supermin: internal insmod virtio_input.ko
+supermin: internal insmod virtio_mmio.ko
+supermin: internal insmod crc-itu-t.ko
+supermin: internal insmod crc4.ko
+supermin: internal insmod crc64.ko
+supermin: internal insmod crc7.ko
+supermin: internal insmod crc8.ko
+supermin: internal insmod libcrc32c.ko
+supermin: picked /sys/block/sdc/dev (8:32) as root device
+supermin: creating /dev/root as block special 8:32
+supermin: mounting new root on /root
+[    0.825686] EXT4-fs (sdc): mounting ext2 file system using the ext4 subsystem
+[    0.829366] EXT4-fs (sdc): mounted filesystem without journal. Opts: 
+supermin: deleting initramfs files
+supermin: chroot
+Starting /init script ...
+[    0.858281] mkdir (208) used greatest stack depth: 12424 bytes left
+[    0.866270] mount (210) used greatest stack depth: 12352 bytes left
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdc selinux=0 guestfs_verbose=1 TERM=xterm-256color == *guestfs_network=1* ]]
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdc selinux=0 guestfs_verbose=1 TERM=xterm-256color == *guestfs_rescue=1* ]]
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdc selinux=0 guestfs_verbose=1 TERM=xterm-256color == *guestfs_noreboot=1* ]]
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdc selinux=0 guestfs_verbose=1 TERM=xterm-256color == *guestfs_boot_analysis=1* ]]
++ '[' '!' -d /sys ']'
++ mkdir -p /sys
++ mount -t sysfs /sys /sys
++ mkdir -p /run
++ mount -t tmpfs -o nosuid,size=20%,mode=0755 tmpfs /run
++ mkdir -p /run/lock
++ ln -s ../run/lock /var/lock
+[    0.887127] ln (217) used greatest stack depth: 11704 bytes left
++ test -e /etc/mtab
++ ln -s /proc/mounts /etc/mtab
++ mount -t devtmpfs /dev /dev
++ mkdir -p /dev/pts
++ mount -t devpts /dev/pts /dev/pts
++ mkdir -p /dev/shm
++ mount -t tmpfs -o mode=1777 shmfs /dev/shm
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdc selinux=0 guestfs_verbose=1 TERM=xterm-256color == *selinux=1* ]]
++ mkdir -p /run/tmpfiles.d
++ kmod static-nodes --format=tmpfiles --output=/run/tmpfiles.d/kmod.conf
+++ od -x -A n
+++ dd if=/dev/urandom bs=16 count=1 status=none
++ machine_id=' 64aa 43d5 3104 dd52 af28 545e d6d0 9160'
++ echo 64aa43d53104dd52af28545ed6d09160
++ systemd-tmpfiles --prefix=/dev --prefix=/run --prefix=/var/run --create --boot
+[/usr/lib/tmpfiles.d/mdadm.conf:1] Line references path below legacy directory /var/run/, updating /var/run/mdadm \xe2\x86\x92 /run/mdadm; please update the tmpfiles.d/ drop-in file accordingly.
+[/usr/lib/tmpfiles.d/systemd.conf:11] Unknown group 'utmp'.
+[/usr/lib/tmpfiles.d/systemd.conf:19] Unknown user 'systemd-network'.
+[/usr/lib/tmpfiles.d/systemd.conf:20] Unknown user 'systemd-network'.
+[/usr/lib/tmpfiles.d/systemd.conf:21] Unknown user 'systemd-network'.
+[/usr/lib/tmpfiles.d/systemd.conf:25] Unknown group 'systemd-journal'.
+[/usr/lib/tmpfiles.d/systemd.conf:26] Unknown group 'systemd-journal'.
++ for f in /lib/systemd/systemd-udevd /usr/lib/systemd/systemd-udevd /sbin/udevd /lib/udev/udevd /usr/lib/udev/udevd
++ '[' -x /lib/systemd/systemd-udevd ']'
++ UDEVD=/lib/systemd/systemd-udevd
++ break
++ '[' -z /lib/systemd/systemd-udevd ']'
++ /lib/systemd/systemd-udevd --daemon
+starting version 239
++ udevadm trigger
++ udevadm settle --timeout=600
++ shopt -s nullglob
++ for f in /sys/block/sd*/device/timeout
++ echo 300
++ for f in /sys/block/sd*/device/timeout
++ echo 300
++ for f in /sys/block/sd*/device/timeout
++ echo 300
++ for f in /sys/block/{h,s,ub,v}d*/queue/scheduler
++ echo noop
+/init: line 116: echo: write error: Invalid argument
++ for f in /sys/block/{h,s,ub,v}d*/queue/scheduler
++ echo noop
+/init: line 116: echo: write error: Invalid argument
++ for f in /sys/block/{h,s,ub,v}d*/queue/scheduler
++ echo noop
+/init: line 116: echo: write error: Invalid argument
++ shopt -u nullglob
++ ip addr add 127.0.0.1/8 brd + dev lo scope host
++ ip link set dev lo up
+[    1.287933] ip (256) used greatest stack depth: 11400 bytes left
++ test '' = 1
++ mdadm -As --auto=yes --no-degraded
+mdadm: No arrays found in config file or automatically
++ mkdir -p /tmp/lvm
++ touch /tmp/lvm/lvm.conf
++ LVM_SYSTEM_DIR=/tmp/lvm
++ export LVM_SYSTEM_DIR
++ lvmetad
++ modprobe dm_mod
++ lvm pvscan --cache --activate ay
+  2 logical volume(s) in volume group "tpl" now active
++ mdadm -As --auto=yes --run
+mdadm: No arrays found in config file or automatically
++ ldmtool create all
+[
+]
++ test 1 = 1
++ test '' '!=' 1
++ uname -a
+Linux (none) 5.0.5-200.fc29.x86_64+debug #1 SMP Wed Mar 27 20:38:00 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
++ ls -lR /dev
+/dev:
+total 0
+crw-r--r-- 1 root root  10, 235 Apr  6 11:55 autofs
+drwxr-xr-x 2 root root      180 Apr  6 11:55 block
+drwxr-xr-x 2 root root      100 Apr  6 11:55 bsg
+crw------- 1 root root  10, 234 Apr  6 11:55 btrfs-control
+drwxr-xr-x 2 root root     2280 Apr  6 11:55 char
+crw------- 1 root root   5,   1 Apr  6 11:55 console
+lrwxrwxrwx 1 root root       11 Apr  6 11:55 core -> /proc/kcore
+drwxr-xr-x 3 root root       60 Apr  6 11:55 cpu
+crw------- 1 root root  10,  61 Apr  6 11:55 cpu_dma_latency
+crw------- 1 root root  10, 203 Apr  6 11:55 cuse
+drwxr-xr-x 6 root root      120 Apr  6 11:55 disk
+brw-rw---- 1 root disk 253,   0 Apr  6 11:55 dm-0
+brw-rw---- 1 root disk 253,   1 Apr  6 11:55 dm-1
+lrwxrwxrwx 1 root root       13 Apr  6 11:55 fd -> /proc/self/fd
+crw-rw-rw- 1 root root   1,   7 Apr  6 11:55 full
+crw-rw-rw- 1 root root  10, 229 Apr  6 11:55 fuse
+crw------- 1 root root  10, 183 Apr  6 11:55 hwrng
+drwxr-xr-x 3 root root      180 Apr  6 11:55 input
+crw-r--r-- 1 root root   1,  11 Apr  6 11:55 kmsg
+crw-rw---- 1 root disk  10, 237 Apr  6 11:55 loop-control
+drwxr-xr-x 2 root root      100 Apr  6 11:55 mapper
+crw------- 1 root root  10, 227 Apr  6 11:55 mcelog
+crw------- 1 root root   1,   1 Apr  6 11:55 mem
+crw------- 1 root root  10,  58 Apr  6 11:55 memory_bandwidth
+drwxr-xr-x 2 root root       60 Apr  6 11:55 net
+crw------- 1 root root  10,  60 Apr  6 11:55 network_latency
+crw------- 1 root root  10,  59 Apr  6 11:55 network_throughput
+crw-rw-rw- 1 root root   1,   3 Apr  6 11:55 null
+crw------- 1 root root  10, 144 Apr  6 11:55 nvram
+crw------- 1 root root   1,   4 Apr  6 11:55 port
+crw------- 1 root root 108,   0 Apr  6 11:55 ppp
+crw-rw-rw- 1 root root   5,   2 Apr  6 11:55 ptmx
+drwxr-xr-x 2 root root        0 Apr  6 11:55 pts
+crw-rw-rw- 1 root root   1,   8 Apr  6 11:55 random
+drwxr-xr-x 2 root root       60 Apr  6 11:55 raw
+lrwxrwxrwx 1 root root        4 Apr  6 11:55 rtc -> rtc0
+crw------- 1 root root 249,   0 Apr  6 11:55 rtc0
+brw------- 1 root root   8,   0 Apr  6 11:55 sda
+brw------- 1 root root   8,   1 Apr  6 11:55 sda1
+brw------- 1 root root   8,   2 Apr  6 11:55 sda2
+brw------- 1 root root   8,  16 Apr  6 11:55 sdb
+brw------- 1 root root   8,  32 Apr  6 11:55 sdc
+crw------- 1 root root  21,   0 Apr  6 11:55 sg0
+crw------- 1 root root  21,   1 Apr  6 11:55 sg1
+crw------- 1 root root  21,   2 Apr  6 11:55 sg2
+drwxrwxrwt 2 root root       40 Apr  6 11:55 shm
+crw------- 1 root root  10, 231 Apr  6 11:55 snapshot
+drwxr-xr-x 2 root root       80 Apr  6 11:55 snd
+lrwxrwxrwx 1 root root       15 Apr  6 11:55 stderr -> /proc/self/fd/2
+lrwxrwxrwx 1 root root       15 Apr  6 11:55 stdin -> /proc/self/fd/0
+lrwxrwxrwx 1 root root       15 Apr  6 11:55 stdout -> /proc/self/fd/1
+drwxr-xr-x 2 root root       80 Apr  6 11:55 tpl
+crw-rw-rw- 1 root root   5,   0 Apr  6 11:55 tty
+crw------- 1 root root   4,   0 Apr  6 11:55 tty0
+crw------- 1 root root   4,   1 Apr  6 11:55 tty1
+crw------- 1 root root   4,  10 Apr  6 11:55 tty10
+crw------- 1 root root   4,  11 Apr  6 11:55 tty11
+crw------- 1 root root   4,  12 Apr  6 11:55 tty12
+crw------- 1 root root   4,  13 Apr  6 11:55 tty13
+crw------- 1 root root   4,  14 Apr  6 11:55 tty14
+crw------- 1 root root   4,  15 Apr  6 11:55 tty15
+crw------- 1 root root   4,  16 Apr  6 11:55 tty16
+crw------- 1 root root   4,  17 Apr  6 11:55 tty17
+crw------- 1 root root   4,  18 Apr  6 11:55 tty18
+crw------- 1 root root   4,  19 Apr  6 11:55 tty19
+crw------- 1 root root   4,   2 Apr  6 11:55 tty2
+crw------- 1 root root   4,  20 Apr  6 11:55 tty20
+crw------- 1 root root   4,  21 Apr  6 11:55 tty21
+crw------- 1 root root   4,  22 Apr  6 11:55 tty22
+crw------- 1 root root   4,  23 Apr  6 11:55 tty23
+crw------- 1 root root   4,  24 Apr  6 11:55 tty24
+crw------- 1 root root   4,  25 Apr  6 11:55 tty25
+crw------- 1 root root   4,  26 Apr  6 11:55 tty26
+crw------- 1 root root   4,  27 Apr  6 11:55 tty27
+crw------- 1 root root   4,  28 Apr  6 11:55 tty28
+crw------- 1 root root   4,  29 Apr  6 11:55 tty29
+crw------- 1 root root   4,   3 Apr  6 11:55 tty3
+crw------- 1 root root   4,  30 Apr  6 11:55 tty30
+crw------- 1 root root   4,  31 Apr  6 11:55 tty31
+crw------- 1 root root   4,  32 Apr  6 11:55 tty32
+crw------- 1 root root   4,  33 Apr  6 11:55 tty33
+crw------- 1 root root   4,  34 Apr  6 11:55 tty34
+crw------- 1 root root   4,  35 Apr  6 11:55 tty35
+crw------- 1 root root   4,  36 Apr  6 11:55 tty36
+crw------- 1 root root   4,  37 Apr  6 11:55 tty37
+crw------- 1 root root   4,  38 Apr  6 11:55 tty38
+crw------- 1 root root   4,  39 Apr  6 11:55 tty39
+crw------- 1 root root   4,   4 Apr  6 11:55 tty4
+crw------- 1 root root   4,  40 Apr  6 11:55 tty40
+crw------- 1 root root   4,  41 Apr  6 11:55 tty41
+crw------- 1 root root   4,  42 Apr  6 11:55 tty42
+crw------- 1 root root   4,  43 Apr  6 11:55 tty43
+crw------- 1 root root   4,  44 Apr  6 11:55 tty44
+crw------- 1 root root   4,  45 Apr  6 11:55 tty45
+crw------- 1 root root   4,  46 Apr  6 11:55 tty46
+crw------- 1 root root   4,  47 Apr  6 11:55 tty47
+crw------- 1 root root   4,  48 Apr  6 11:55 tty48
+crw------- 1 root root   4,  49 Apr  6 11:55 tty49
+crw------- 1 root root   4,   5 Apr  6 11:55 tty5
+crw------- 1 root root   4,  50 Apr  6 11:55 tty50
+crw------- 1 root root   4,  51 Apr  6 11:55 tty51
+crw------- 1 root root   4,  52 Apr  6 11:55 tty52
+crw------- 1 root root   4,  53 Apr  6 11:55 tty53
+crw------- 1 root root   4,  54 Apr  6 11:55 tty54
+crw------- 1 root root   4,  55 Apr  6 11:55 tty55
+crw------- 1 root root   4,  56 Apr  6 11:55 tty56
+crw------- 1 root root   4,  57 Apr  6 11:55 tty57
+crw------- 1 root root   4,  58 Apr  6 11:55 tty58
+crw------- 1 root root   4,  59 Apr  6 11:55 tty59
+crw------- 1 root root   4,   6 Apr  6 11:55 tty6
+crw------- 1 root root   4,  60 Apr  6 11:55 tty60
+crw------- 1 root root   4,  61 Apr  6 11:55 tty61
+crw------- 1 root root   4,  62 Apr  6 11:55 tty62
+crw------- 1 root root   4,  63 Apr  6 11:55 tty63
+crw------- 1 root root   4,   7 Apr  6 11:55 tty7
+crw------- 1 root root   4,   8 Apr  6 11:55 tty8
+crw------- 1 root root   4,   9 Apr  6 11:55 tty9
+crw------- 1 root root   4,  64 Apr  6 11:55 ttyS0
+crw------- 1 root root  10,  62 Apr  6 11:55 udmabuf
+crw------- 1 root root  10, 239 Apr  6 11:55 uhid
+crw------- 1 root root  10, 223 Apr  6 11:55 uinput
+crw-rw-rw- 1 root root   1,   9 Apr  6 11:55 urandom
+crw------- 1 root root 241,   0 Apr  6 11:55 usbmon0
+crw------- 1 root root   7,   0 Apr  6 11:55 vcs
+crw------- 1 root root   7,   1 Apr  6 11:55 vcs1
+crw------- 1 root root   7, 128 Apr  6 11:55 vcsa
+crw------- 1 root root   7, 129 Apr  6 11:55 vcsa1
+crw------- 1 root root   7,  64 Apr  6 11:55 vcsu
+crw------- 1 root root   7,  65 Apr  6 11:55 vcsu1
+drwxr-xr-x 2 root root       60 Apr  6 11:55 vfio
+crw------- 1 root root  10,  63 Apr  6 11:55 vga_arbiter
+crw------- 1 root root  10, 137 Apr  6 11:55 vhci
+crw------- 1 root root  10, 238 Apr  6 11:55 vhost-net
+crw------- 1 root root  10, 241 Apr  6 11:55 vhost-vsock
+drwxr-xr-x 2 root root       60 Apr  6 11:55 virtio-ports
+crw------- 1 root root 239,   1 Apr  6 11:55 vport1p1
+crw-rw-rw- 1 root root   1,   5 Apr  6 11:55 zero
+
+/dev/block:
+total 0
+lrwxrwxrwx 1 root root 7 Apr  6 11:55 253:0 -> ../dm-0
+lrwxrwxrwx 1 root root 7 Apr  6 11:55 253:1 -> ../dm-1
+lrwxrwxrwx 1 root root 6 Apr  6 11:55 8:0 -> ../sda
+lrwxrwxrwx 1 root root 7 Apr  6 11:55 8:1 -> ../sda1
+lrwxrwxrwx 1 root root 6 Apr  6 11:55 8:16 -> ../sdb
+lrwxrwxrwx 1 root root 7 Apr  6 11:55 8:2 -> ../sda2
+lrwxrwxrwx 1 root root 6 Apr  6 11:55 8:32 -> ../sdc
+
+/dev/bsg:
+total 0
+crw------- 1 root root 242, 0 Apr  6 11:55 2:0:0:0
+crw------- 1 root root 242, 1 Apr  6 11:55 2:0:1:0
+crw------- 1 root root 242, 2 Apr  6 11:55 2:0:2:0
+
+/dev/char:
+total 0
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 10:144 -> ../nvram
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 10:183 -> ../hwrng
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 10:227 -> ../mcelog
+lrwxrwxrwx 1 root root 11 Apr  6 11:55 10:231 -> ../snapshot
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 10:235 -> ../autofs
+lrwxrwxrwx 1 root root 17 Apr  6 11:55 10:236 -> ../mapper/control
+lrwxrwxrwx 1 root root 19 Apr  6 11:55 10:58 -> ../memory_bandwidth
+lrwxrwxrwx 1 root root 21 Apr  6 11:55 10:59 -> ../network_throughput
+lrwxrwxrwx 1 root root 18 Apr  6 11:55 10:60 -> ../network_latency
+lrwxrwxrwx 1 root root 18 Apr  6 11:55 10:61 -> ../cpu_dma_latency
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 10:62 -> ../udmabuf
+lrwxrwxrwx 1 root root 14 Apr  6 11:55 10:63 -> ../vga_arbiter
+lrwxrwxrwx 1 root root 15 Apr  6 11:55 13:32 -> ../input/mouse0
+lrwxrwxrwx 1 root root 15 Apr  6 11:55 13:33 -> ../input/mouse1
+lrwxrwxrwx 1 root root 13 Apr  6 11:55 13:63 -> ../input/mice
+lrwxrwxrwx 1 root root 15 Apr  6 11:55 13:64 -> ../input/event0
+lrwxrwxrwx 1 root root 15 Apr  6 11:55 13:65 -> ../input/event1
+lrwxrwxrwx 1 root root 15 Apr  6 11:55 13:66 -> ../input/event2
+lrwxrwxrwx 1 root root 13 Apr  6 11:55 162:0 -> ../raw/rawctl
+lrwxrwxrwx 1 root root  6 Apr  6 11:55 1:1 -> ../mem
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 1:11 -> ../kmsg
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 1:3 -> ../null
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 1:4 -> ../port
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 1:5 -> ../zero
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 1:7 -> ../full
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 1:8 -> ../random
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 1:9 -> ../urandom
+lrwxrwxrwx 1 root root 12 Apr  6 11:55 202:0 -> ../cpu/0/msr
+lrwxrwxrwx 1 root root 14 Apr  6 11:55 203:0 -> ../cpu/0/cpuid
+lrwxrwxrwx 1 root root  6 Apr  6 11:55 21:0 -> ../sg0
+lrwxrwxrwx 1 root root  6 Apr  6 11:55 21:1 -> ../sg1
+lrwxrwxrwx 1 root root  6 Apr  6 11:55 21:2 -> ../sg2
+lrwxrwxrwx 1 root root 11 Apr  6 11:55 239:1 -> ../vport1p1
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 241:0 -> ../usbmon0
+lrwxrwxrwx 1 root root 14 Apr  6 11:55 242:0 -> ../bsg/2:0:0:0
+lrwxrwxrwx 1 root root 14 Apr  6 11:55 242:1 -> ../bsg/2:0:1:0
+lrwxrwxrwx 1 root root 14 Apr  6 11:55 242:2 -> ../bsg/2:0:2:0
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 249:0 -> ../rtc0
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:0 -> ../tty0
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:1 -> ../tty1
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:10 -> ../tty10
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:11 -> ../tty11
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:12 -> ../tty12
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:13 -> ../tty13
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:14 -> ../tty14
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:15 -> ../tty15
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:16 -> ../tty16
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:17 -> ../tty17
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:18 -> ../tty18
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:19 -> ../tty19
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:2 -> ../tty2
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:20 -> ../tty20
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:21 -> ../tty21
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:22 -> ../tty22
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:23 -> ../tty23
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:24 -> ../tty24
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:25 -> ../tty25
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:26 -> ../tty26
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:27 -> ../tty27
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:28 -> ../tty28
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:29 -> ../tty29
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:3 -> ../tty3
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:30 -> ../tty30
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:31 -> ../tty31
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:32 -> ../tty32
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:33 -> ../tty33
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:34 -> ../tty34
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:35 -> ../tty35
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:36 -> ../tty36
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:37 -> ../tty37
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:38 -> ../tty38
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:39 -> ../tty39
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:4 -> ../tty4
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:40 -> ../tty40
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:41 -> ../tty41
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:42 -> ../tty42
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:43 -> ../tty43
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:44 -> ../tty44
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:45 -> ../tty45
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:46 -> ../tty46
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:47 -> ../tty47
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:48 -> ../tty48
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:49 -> ../tty49
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:5 -> ../tty5
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:50 -> ../tty50
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:51 -> ../tty51
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:52 -> ../tty52
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:53 -> ../tty53
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:54 -> ../tty54
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:55 -> ../tty55
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:56 -> ../tty56
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:57 -> ../tty57
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:58 -> ../tty58
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:59 -> ../tty59
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:6 -> ../tty6
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:60 -> ../tty60
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:61 -> ../tty61
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:62 -> ../tty62
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:63 -> ../tty63
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 4:64 -> ../ttyS0
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:7 -> ../tty7
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:8 -> ../tty8
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 4:9 -> ../tty9
+lrwxrwxrwx 1 root root  6 Apr  6 11:55 5:0 -> ../tty
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 5:1 -> ../console
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 5:2 -> ../ptmx
+lrwxrwxrwx 1 root root  6 Apr  6 11:55 7:0 -> ../vcs
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 7:1 -> ../vcs1
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 7:128 -> ../vcsa
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 7:129 -> ../vcsa1
+lrwxrwxrwx 1 root root  7 Apr  6 11:55 7:64 -> ../vcsu
+lrwxrwxrwx 1 root root  8 Apr  6 11:55 7:65 -> ../vcsu1
+
+/dev/cpu:
+total 0
+drwxr-xr-x 2 root root 80 Apr  6 11:55 0
+
+/dev/cpu/0:
+total 0
+crw------- 1 root root 203, 0 Apr  6 11:55 cpuid
+crw------- 1 root root 202, 0 Apr  6 11:55 msr
+
+/dev/disk:
+total 0
+drwxr-xr-x 2 root root 240 Apr  6 11:55 by-id
+drwxr-xr-x 2 root root  80 Apr  6 11:55 by-partuuid
+drwxr-xr-x 2 root root 140 Apr  6 11:55 by-path
+drwxr-xr-x 2 root root 120 Apr  6 11:55 by-uuid
+
+/dev/disk/by-id:
+total 0
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 dm-name-tpl-root -> ../../dm-1
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 dm-name-tpl-swap -> ../../dm-0
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 dm-uuid-LVM-eBefZV34BzqCyEdlzyJb1mzO0GRju8sA7AqpjYJ12vItD9cdlPcLGAKBBVC7qFZW -> ../../dm-1
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 dm-uuid-LVM-eBefZV34BzqCyEdlzyJb1mzO0GRju8sAtj3OamDxi4li9OyRzMsgSh8FM8SQlhMB -> ../../dm-0
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 lvm-pv-uuid-sqycQ1-FKdm-n4zq-8ojz-xvFW-NQrk-KyyJbO -> ../../sda2
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-0 -> ../../sda
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-0-part1 -> ../../sda1
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-0-part2 -> ../../sda2
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-1-0 -> ../../sdb
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-2-0 -> ../../sdc
+
+/dev/disk/by-partuuid:
+total 0
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 000cdf76-01 -> ../../sda1
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 000cdf76-02 -> ../../sda2
+
+/dev/disk/by-path:
+total 0
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 pci-0000:00:02.0-scsi-0:0:0:0 -> ../../sda
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 pci-0000:00:02.0-scsi-0:0:0:0-part1 -> ../../sda1
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 pci-0000:00:02.0-scsi-0:0:0:0-part2 -> ../../sda2
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 pci-0000:00:02.0-scsi-0:0:1:0 -> ../../sdb
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 pci-0000:00:02.0-scsi-0:0:2:0 -> ../../sdc
+
+/dev/disk/by-uuid:
+total 0
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 00a5b86e-46ca-4662-8884-edfc733c8a84 -> ../../dm-1
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 5dbe35b5-91fa-47ec-8092-d59919d6dfb4 -> ../../dm-0
+lrwxrwxrwx 1 root root 10 Apr  6 11:55 66fc4340-c36f-4c4f-9eef-ee73ee42c1a5 -> ../../sda1
+lrwxrwxrwx 1 root root  9 Apr  6 11:55 d6ea4199-e53e-4a3b-9be0-c0010e2f58c0 -> ../../sdc
+
+/dev/input:
+total 0
+drwxr-xr-x 2 root root    100 Apr  6 11:55 by-path
+crw------- 1 root root 13, 64 Apr  6 11:55 event0
+crw------- 1 root root 13, 65 Apr  6 11:55 event1
+crw------- 1 root root 13, 66 Apr  6 11:55 event2
+crw------- 1 root root 13, 63 Apr  6 11:55 mice
+crw------- 1 root root 13, 32 Apr  6 11:55 mouse0
+crw------- 1 root root 13, 33 Apr  6 11:55 mouse1
+
+/dev/input/by-path:
+total 0
+lrwxrwxrwx 1 root root 9 Apr  6 11:55 platform-i8042-serio-0-event-kbd -> ../event0
+lrwxrwxrwx 1 root root 9 Apr  6 11:55 platform-i8042-serio-1-event-mouse -> ../event2
+lrwxrwxrwx 1 root root 9 Apr  6 11:55 platform-i8042-serio-1-mouse -> ../mouse0
+
+/dev/mapper:
+total 0
+crw------- 1 root root 10, 236 Apr  6 11:55 control
+lrwxrwxrwx 1 root root       7 Apr  6 11:55 tpl-root -> ../dm-1
+lrwxrwxrwx 1 root root       7 Apr  6 11:55 tpl-swap -> ../dm-0
+
+/dev/net:
+total 0
+crw-rw-rw- 1 root root 10, 200 Apr  6 11:55 tun
+
+/dev/pts:
+total 0
+c--------- 1 root root 5, 2 Apr  6 11:55 ptmx
+
+/dev/raw:
+total 0
+crw------- 1 root root 162, 0 Apr  6 11:55 rawctl
+
+/dev/shm:
+total 0
+
+/dev/snd:
+total 0
+crw-rw---- 1 root audio 116,  1 Apr  6 11:55 seq
+crw-rw---- 1 root audio 116, 33 Apr  6 11:55 timer
+
+/dev/tpl:
+total 0
+lrwxrwxrwx 1 root root 7 Apr  6 11:55 root -> ../dm-1
+lrwxrwxrwx 1 root root 7 Apr  6 11:55 swap -> ../dm-0
+
+/dev/vfio:
+total 0
+crw------- 1 root root 10, 196 Apr  6 11:55 vfio
+
+/dev/virtio-ports:
+total 0
+lrwxrwxrwx 1 root root 11 Apr  6 11:55 org.libguestfs.channel.0 -> ../vport1p1
++ cat /proc/mounts
+/dev/root / ext2 rw,noatime,block_validity,barrier,user_xattr,acl 0 0
+/proc /proc proc rw,relatime 0 0
+/sys /sys sysfs rw,relatime 0 0
+tmpfs /run tmpfs rw,nosuid,relatime,size=145552k,mode=755 0 0
+/dev /dev devtmpfs rw,relatime,size=358172k,nr_inodes=89543,mode=755 0 0
+/dev/pts /dev/pts devpts rw,relatime,mode=600,ptmxmode=000 0 0
+shmfs /dev/shm tmpfs rw,relatime 0 0
++ cat /proc/mdstat
+Personalities : 
+unused devices: <none>
++ lvm config
++ lvm pvs
+  PV         VG  Fmt  Attr PSize  PFree
+  /dev/sda2  tpl lvm2 a--  <1.09g    0 
++ lvm vgs
+  VG  #PV #LV #SN Attr   VSize  VFree
+  tpl   1   2   0 wz--n- <1.09g    0 
++ lvm lvs
+  LV   VG  Attr       LSize Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  root tpl -wi-a----- 1.08g                                                    
+  swap tpl -wi-a----- 4.00m                                                    
++ ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 brd 127.255.255.255 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
++ ip r
++ cat /etc/resolv.conf
+cat: /etc/resolv.conf: No such file or directory
++ lsmod
+Module                  Size  Used by
+libcrc32c              16384  0
+crc8                   16384  0
+crc7                   16384  0
+crc64                  16384  0
+crc4                   16384  0
+crc_itu_t              16384  0
+virtio_mmio            16384  0
+virtio_input           16384  0
+virtio_balloon         24576  0
+virtio_scsi            24576  2
+virtio_rpmsg_bus       24576  0
+rpmsg_core             16384  1 virtio_rpmsg_bus
+nd_pmem                24576  0
+nd_btt                 28672  1 nd_pmem
+virtio_net             61440  0
+net_failover           24576  1 virtio_net
+failover               16384  1 net_failover
+virtio_crypto          28672  0
+crypto_engine          16384  1 virtio_crypto
+virtio_console         40960  0
+virtio_blk             20480  0
+crc32_generic          16384  0
+crct10dif_pclmul       16384  1
+crc32c_intel           24576  2
+crc32_pclmul           16384  0
++ date
+Sat Apr  6 11:55:50 UTC 2019
++ echo -n 'clocksource: '
+clocksource: + cat /sys/devices/system/clocksource/clocksource0/current_clocksource
+kvm-clock
++ echo -n 'uptime: '
+uptime: + cat /proc/uptime
+1.62 0.18
++ cmd=guestfsd
+++ grep -Eo 'guestfs_channel=[^[:space:]]+' /proc/cmdline
++ eval
++ test x '!=' x
++ test 1 = 1
++ cmd='guestfsd --verbose'
++ test '' = 1
++ false
++ test '' = 1
++ echo guestfsd --verbose
+guestfsd --verbose
++ guestfsd --verbose
+lvm_system_dir = /tmp/lvm
+OCaml daemon loaded
+trying to open virtio-serial channel '/dev/virtio-ports/org.libguestfs.channel.0'
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+libguestfs: recv_from_daemon: received GUESTFS_LAUNCH_FLAG
+libguestfs: appliance is up
+guestfsd: <= lvm_set_filter (0xff) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: lvm vgchange -an
+lvm config:
+devices {
+\tfilter=["a|^/dev/sda$|","a|^/dev/sda[0-9]|","r|.*|"]
+\tglobal_filter=["a|^/dev/sda$|","a|^/dev/sda[0-9]|","r|.*|"]
+}
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: lvm vgscan --cache
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: lvm vgchange -ay
+guestfsd: => lvm_set_filter (0xff) took 0.14 secs
+guestfsd: <= internal_feature_available (0x1ca) request length 56 bytes
+guestfsd: => internal_feature_available (0x1ca) took 0.00 secs
+guestfsd: <= internal_feature_available (0x1ca) request length 52 bytes
+guestfsd: => internal_feature_available (0x1ca) took 0.00 secs
+guestfsd: <= internal_feature_available (0x1ca) request length 52 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: grep ^[[:space:]]*btrfs$ /proc/filesystems
+commandrvf: stdout=n stderr=n flags=0x0
+commandrvf: modprobe btrfs
+[    1.902524] raid6: using algorithm avx2x4 gen() 0 MB/s
+[    1.903018] raid6: .... xor() 0 MB/s, rmw enabled
+[    1.903519] raid6: using avx2x2 recovery algorithm
+[    1.917918] xor: automatically using best checksumming function   avx       
+[    2.005635] Btrfs loaded, crc32c=crc32c-intel
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: grep ^[[:space:]]*btrfs$ /proc/filesystems
+guestfsd: => internal_feature_available (0x1ca) took 0.13 secs
+guestfsd: <= internal_feature_available (0x1ca) request length 48 bytes
+guestfsd: => internal_feature_available (0x1ca) took 0.00 secs
+guestfsd: <= internal_feature_available (0x1ca) request length 48 bytes
+guestfsd: => internal_feature_available (0x1ca) took 0.00 secs
+guestfsd: <= blockdev_getss (0x3b) request length 52 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=y stderr=y flags=0x0
+commandrvf: blockdev --getss /dev/sdb
+guestfsd: => blockdev_getss (0x3b) took 0.03 secs
+guestfsd: <= blockdev_getsize64 (0x3f) request length 52 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=y stderr=y flags=0x0
+commandrvf: blockdev --getsize64 /dev/sda
+guestfsd: => blockdev_getsize64 (0x3f) took 0.02 secs
+guestfsd: <= blockdev_getsize64 (0x3f) request length 52 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=y stderr=y flags=0x0
+commandrvf: blockdev --getsize64 /dev/sdb
+/dev/fedora/ttpl003 size 1296039936 bytes
+/dev/fedora/tst030 size 5368709120 bytes
+guestfsd: => blockdev_getsize64 (0x3f) took 0.02 secs
+guestfsd: <= part_get_parttype (0xd6) request length 52 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+command: parted '-m' '-s' '--' '/dev/sda' 'unit' 'b' 'print'
+command: parted returned 0
+command: parted: stdout:
+BYT;
+/dev/sda:1296039936B:scsi:512:512:msdos:QEMU QEMU HARDDISK:;
+1:1048576B:125829119B:124780544B:xfs::boot;
+2:125829120B:1296039935B:1170210816B:::lvm;
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+partition table type: msdos
+guestfsd: => part_get_parttype (0xd6) took 0.10 secs
+guestfsd: <= pvs_full (0xc) request length 40 bytes
+commandrvf: stdout=y stderr=y flags=0x0
+commandrvf: lvm pvs -o pv_name,pv_uuid,pv_fmt,pv_size,dev_size,pv_free,pv_used,pv_attr,pv_pe_count,pv_pe_alloc_count,pv_tags,pe_start,pv_mda_count,pv_mda_free --unbuffered --noheadings --nosuffix --separator  --units b
+guestfsd: => pvs_full (0xc) took 0.02 secs
+guestfsd: <= part_list (0xd5) request length 52 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+command: parted '-m' '-s' '--' '/dev/sda' 'unit' 'b' 'print'
+command: parted returned 0
+command: parted: stdout:
+BYT;
+/dev/sda:1296039936B:scsi:512:512:msdos:QEMU QEMU HARDDISK:;
+1:1048576B:125829119B:124780544B:xfs::boot;
+2:125829120B:1296039935B:1170210816B:::lvm;
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => part_list (0xd5) took 0.09 secs
+guestfsd: <= part_get_bootable (0xea) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=y stderr=y flags=0x0
+commandrvf: parted -m -s -- /dev/sda unit b print
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => part_get_bootable (0xea) took 0.09 secs
+guestfsd: <= part_get_mbr_id (0xeb) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+command: sfdisk '--help'
+command: sfdisk returned 0
+command: sfdisk: stdout:
+
+Usage:
+ sfdisk [options] <dev> [[-N] <part>]
+ sfdisk [options] <command>
+
+Display or manipulate a disk partition table.
+
+Commands:
+ -A, --activate <dev> [<part> ...] list or set bootable (P)MBR partitions
+ -d, --dump <dev>                  dump partition table (usable for later input)
+ -J, --json <dev>                  dump partition table in JSON format
+ -g, --show-geometry [<dev> ...]   list geometry of all or specified devices
+ -l, --list [<dev> ...]            list partitions of each device
+ -F, --list-free [<dev> ...]       list unpartitioned free areas of each device
+ -r, --reorder <dev>               fix partitions order (by start offset)
+ -s, --show-size [<dev> ...]       list sizes of all or specified devices
+ -T, --list-types                  print the recognized types (see -X)
+ -V, --verify [<dev> ...]          test whether partitions seem correct
+     --delete <dev> [<part> ...]   delete all or specified partitions
+
+ --part-label <dev> <part> [<str>] print or change partition label
+ --part-type <dev> <part> [<type>] print or change partition type
+ --part-uuid <dev> <part> [<uuid>] print or change partition uuid
+ --part-attrs <dev> <part> [<str>] print or change partition attributes
+
+ <dev>                     device (usually disk) path
+ <part>                    partition number
+ <type>                    partition type, GUID for GPT, hex for MBR
+
+Options:
+ -a, --append              append partitions to existing partition table
+ -b, --backup              backup partition table sectors (see -O)
+     --bytes               print SIZE in bytes rather than in human readable format
+     --move-data[=<typescript>] move partition data after relocation (requires -N)
+ -f, --force               disable all consistency checking
+     --color[=<when>]      colorize output (auto, always or never)
+                             colors are enabled by default
+ -N, --partno <num>        specify partition number
+ -n, --no-act              do everything except write to device
+     --no-reread           do not check whether the device is in use
+     --no-tell-kernel      do not tell kernel about changes
+ -O, --backup-file <path>  override default backup file name
+ -o, --output <list>       output columns
+ -q, --quiet               suppress extra info messages
+ -w, --wipe <mode>         wipe signatures (auto, always or never)
+ -W, --wipe-partitions <mode>  wipe signatures from new partitions (auto, always or never)
+ -X, --label <name>        specify label type (dos, gpt, ...)
+ -Y, --label-nested <name> specify nested label type (dos, bsd)
+
+ -G, --show-pt-geometry    deprecated, alias to --show-geometry
+ -L, --Linux               deprecated, only for backward compatibility
+ -u, --unit S              deprecated, only sector unit is supported
+
+ -h, --help                display this help
+ -v, --version             display version
+
+Available output columns:
+ gpt: Device Start End Sectors Size Type Type-UUID Attrs Name UUID
+ dos: Device Start End Sectors Cylinders Size Type Id Attrs Boot End-C/H/S
+      Start-C/H/S
+ bsd: Slice Start End Sectors Cylinders Size Type Bsize Cpg Fsize
+ sgi: Device Start End Sectors Cylinders Size Type Id Attrs
+ sun: Device Start End Sectors Cylinders Size Type Id Flags
+
+For more details see sfdisk(8).
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+command: sfdisk '--part-type' '/dev/sda' '1'
+command: sfdisk returned 0
+command: sfdisk: stdout:
+83
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => part_get_mbr_id (0xeb) took 0.06 secs
+guestfsd: <= vfs_type (0xc6) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda1
+calling: settle
+command: blkid '-c' '/dev/null' '-o' 'value' '-s' 'TYPE' '/dev/sda1'
+command: blkid returned 0
+command: blkid: stdout:
+xfs
+guestfsd: => vfs_type (0xc6) took 0.02 secs
+guestfsd: <= mount_ro (0x49) request length 64 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda1
+calling: settle
+command: mount '-o' 'ro' '/dev/sda1' '/sysroot//'
+[    2.665975] SGI XFS with ACLs, security attributes, scrub, no debug enabled
+[    2.685328] XFS (sda1): Mounting V5 Filesystem
+[    2.835206] XFS (sda1): Ending clean mount
+guestfsd: => mount_ro (0x49) took 0.29 secs
+guestfsd: <= statvfs (0x36) request length 48 bytes
+command: mount returned 0
+chroot: /sysroot: running 'statvfs: /'
+guestfsd: => statvfs (0x36) took 0.00 secs
+guestfsd: <= umount (0x2d) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: umount /sysroot/
+[    2.868126] XFS (sda1): Unmounting Filesystem
+guestfsd: => umount (0x2d) took 0.03 secs
+guestfsd: <= part_get_name (0x1a0) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+command: parted '-m' '-s' '--' '/dev/sda' 'unit' 'b' 'print'
+command: parted returned 0
+command: parted: stdout:
+BYT;
+/dev/sda:1296039936B:scsi:512:512:msdos:QEMU QEMU HARDDISK:;
+1:1048576B:125829119B:124780544B:xfs::boot;
+2:125829120B:1296039935B:1170210816B:::lvm;
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: error: part-get-name can only be used on GUID Partition Tables
+guestfsd: => part_get_name (0x1a0) took 0.10 secs
+guestfsd: <= part_get_bootable (0xea) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=y stderr=y flags=0x0
+commandrvf: parted -m -s -- /dev/sda unit b print
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => part_get_bootable (0xea) took 0.09 secs
+guestfsd: <= part_get_mbr_id (0xeb) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+command: sfdisk '--part-type' '/dev/sda' '2'
+command: sfdisk returned 0
+command: sfdisk: stdout:
+8e
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => part_get_mbr_id (0xeb) took 0.03 secs
+guestfsd: <= vfs_type (0xc6) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda2
+calling: settle
+command: blkid '-c' '/dev/null' '-o' 'value' '-s' 'TYPE' '/dev/sda2'
+command: blkid returned 0
+command: blkid: stdout:
+LVM2_member
+guestfsd: => vfs_type (0xc6) took 0.01 secs
+guestfsd: <= part_get_name (0x1a0) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+command: parted '-m' '-s' '--' '/dev/sda' 'unit' 'b' 'print'
+command: parted returned 0
+command: parted: stdout:
+BYT;
+/dev/sda:1296039936B:scsi:512:512:msdos:QEMU QEMU HARDDISK:;
+1:1048576B:125829119B:124780544B:xfs::boot;
+2:125829120B:1296039935B:1170210816B:::lvm;
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: error: part-get-name can only be used on GUID Partition Tables
+guestfsd: => part_get_name (0x1a0) took 0.10 secs
+guestfsd: <= lvs (0xb) request length 40 bytes
+command: lvm 'lvs' '--help'
+command: lvm returned 0
+command: lvm: stdout:
+  lvs - Display information about logical volumes
+
+  lvs
+\t[ -H|--history ]
+\t[ -a|--all ]
+\t[ -o|--options String ]
+\t[ -S|--select String ]
+\t[ -O|--sort String ]
+\t[    --segments ]
+\t[    --aligned ]
+\t[    --binary ]
+\t[    --configreport log|vg|lv|pv|pvseg|seg ]
+\t[    --foreign ]
+\t[    --ignorelockingfailure ]
+\t[    --ignoreskippedcluster ]
+\t[    --logonly ]
+\t[    --nameprefixes ]
+\t[    --noheadings ]
+\t[    --nolocking ]
+\t[    --nosuffix ]
+\t[    --readonly ]
+\t[    --reportformat basic|json ]
+\t[    --rows ]
+\t[    --separator String ]
+\t[    --shared ]
+\t[    --trustcache ]
+\t[    --unbuffered ]
+\t[    --units r|R|h|H|b|B|s|S|k|K|m|M|g|G|t|T|p|P|e|E ]
+\t[    --unquoted ]
+\t[ COMMON_OPTIONS ]
+\t[ VG|LV|Tag ... ]
+
+  Common options for lvm:
+\t[ -d|--debug ]
+\t[ -h|--help ]
+\t[ -q|--quiet ]
+\t[ -v|--verbose ]
+\t[ -y|--yes ]
+\t[ -t|--test ]
+\t[    --commandprofile String ]
+\t[    --config String ]
+\t[    --driverloaded y|n ]
+\t[    --lockopt String ]
+\t[    --longhelp ]
+\t[    --profile String ]
+\t[    --version ]
+
+  Use --longhelp to show all options and advanced commands.
+command: lvm 'lvs' '-o' 'vg_name,lv_name' '-S' 'lv_role=public && lv_skip_activation!=yes' '--noheadings' '--separator' '/'
+command: lvm returned 0
+command: lvm: stdout:
+  tpl/root
+  tpl/swap
+guestfsd: => lvs (0xb) took 0.04 secs
+guestfsd: <= vfs_type (0xc6) request length 60 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/tpl/root
+calling: settle
+command: blkid '-c' '/dev/null' '-o' 'value' '-s' 'TYPE' '/dev/tpl/root'
+command: blkid returned 0
+command: blkid: stdout:
+xfs
+guestfsd: => vfs_type (0xc6) took 0.02 secs
+guestfsd: <= mount_ro (0x49) request length 68 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/tpl/root
+calling: settle
+command: mount '-o' 'ro' '/dev/tpl/root' '/sysroot//'
+[    3.329935] XFS (dm-1): Mounting V5 Filesystem
+[    3.349590] XFS (dm-1): Ending clean mount
+guestfsd: => mount_ro (0x49) took 0.04 secs
+guestfsd: <= statvfs (0x36) request length 48 bytes
+command: mount returned 0
+chroot: /sysroot: running 'statvfs: /'
+guestfsd: => statvfs (0x36) took 0.00 secs
+guestfsd: <= umount (0x2d) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: umount /sysroot/
+[    3.382314] XFS (dm-1): Unmounting Filesystem
+guestfsd: => umount (0x2d) took 0.02 secs
+guestfsd: <= vfs_type (0xc6) request length 60 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/tpl/swap
+calling: settle
+command: blkid '-c' '/dev/null' '-o' 'value' '-s' 'TYPE' '/dev/tpl/swap'
+command: blkid returned 0
+command: blkid: stdout:
+swap
+guestfsd: => vfs_type (0xc6) took 0.02 secs
+2 partitions found
+calculate surplus: outsize=5368709120 required=1694498816 overhead=2326528 surplus=3671883776
+surplus before --expand or --shrink: 3671883776
+calculate surplus: outsize=5368709120 required=5366382592 overhead=2326528 surplus=0
+guestfsd: <= part_init (0xd0) request length 64 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=e stderr=y flags=0x10000
+commandrvf: parted -s -- /dev/sdb mklabel msdos
+[    3.470998]  sdb:
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => part_init (0xd0) took 0.09 secs
+guestfsd: <= pread_device (0x114) request length 64 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+guestfsd: => pread_device (0x114) took 0.01 secs
+guestfsd: <= pwrite_device (0x113) request length 512 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+[    3.545387]  sdb:
+calling: settle
+guestfsd: => pwrite_device (0x113) took 0.05 secs
+guestfsd: <= pread_device (0x114) request length 64 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+guestfsd: => pread_device (0x114) took 0.02 secs
+guestfsd: <= pwrite_device (0x113) request length 2097216 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+[    3.644358]  sdb:
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => pwrite_device (0x113) took 0.06 secs
+align_first_partition_and_fix_bootloader = false
+target partition 1: resize: newsize=524288000 start=2048 end=1026047
+target partition 2: resize: newsize=4842094592 start=1026048 end=10483327
+guestfsd: <= part_add (0xd1) request length 80 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=e stderr=y flags=0x10000
+commandrvf: parted -s -- /dev/sdb mkpart primary 2048s 1026047s
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => part_add (0xd1) took 0.08 secs
+guestfsd: <= part_add (0xd1) request length 80 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=e stderr=y flags=0x10000
+commandrvf: parted -s -- /dev/sdb mkpart primary 1026048s 10483327s
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => part_add (0xd1) took 0.12 secs
+guestfsd: <= part_set_bootable (0xd3) request length 60 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=e stderr=y flags=0x10000
+commandrvf: parted -s -- /dev/sdb set 1 boot on
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+guestfsd: => part_set_bootable (0xd3) took 0.13 secs
+guestfsd: <= part_set_mbr_id (0xec) request length 60 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=y stderr=y flags=0x0
+commandrvf: sfdisk --help
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: sfdisk --part-type /dev/sdb 1 83
+[    4.344088]  sdb: sdb1 sdb2
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+[    4.357863]  sdb: sdb1 sdb2
+calling: settle
+guestfsd: => part_set_mbr_id (0xec) took 0.39 secs
+guestfsd: <= part_set_mbr_id (0xec) request length 60 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: sfdisk --part-type /dev/sdb 2 8e
+[    4.726403]  sdb: sdb1 sdb2
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+[    4.757957]  sdb: sdb1 sdb2
+calling: settle
+guestfsd: => part_set_mbr_id (0xec) took 0.39 secs
+guestfsd: <= copy_device_to_device (0x126) request length 104 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda1
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb1
+calling: settle
+guestfsd: => copy_device_to_device (0x126) took 0.38 secs
+guestfsd: <= copy_device_to_device (0x126) request length 104 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda2
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb2
+calling: settle
+guestfsd: => copy_device_to_device (0x126) took 4.66 secs
+guestfsd: <= internal_autosync (0x11a) request length 40 bytes
+umount-all: /proc/mounts: fsname=/dev/root dir=/ type=ext2 opts=rw,noatime,block_validity,barrier,user_xattr,acl freq=0 passno=0
+umount-all: /proc/mounts: fsname=/proc dir=/proc type=proc opts=rw,relatime freq=0 passno=0
+umount-all: /proc/mounts: fsname=/sys dir=/sys type=sysfs opts=rw,relatime freq=0 passno=0
+umount-all: /proc/mounts: fsname=tmpfs dir=/run type=tmpfs opts=rw,nosuid,relatime,size=145552k,mode=755 freq=0 passno=0
+umount-all: /proc/mounts: fsname=/dev dir=/dev type=devtmpfs opts=rw,relatime,size=358172k,nr_inodes=89543,mode=755 freq=0 passno=0
+umount-all: /proc/mounts: fsname=/dev/pts dir=/dev/pts type=devpts opts=rw,relatime,mode=600,ptmxmode=000 freq=0 passno=0
+umount-all: /proc/mounts: fsname=shmfs dir=/dev/shm type=tmpfs opts=rw,relatime freq=0 passno=0
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+fsync /dev/sdb
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdc
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+fsync /dev/sda
+guestfsd: => internal_autosync (0x11a) took 0.27 secs
+libguestfs: calling virDomainDestroy flags=VIR_DOMAIN_DESTROY_GRACEFUL
+libguestfs: closing guestfs handle 0x561130967a40 (state 0)
+libguestfs: command: run: rm
+libguestfs: command: run: \ -rf /tmp/libguestfs7tAC4X
+libguestfs: command: run: rm
+libguestfs: command: run: \ -rf /tmp/libguestfsQZybdO
+libguestfs: launch: program=virt-resize
+libguestfs: launch: version=1.40.1fedora=29,release=2.fc29,libvirt
+libguestfs: launch: backend registered: unix
+libguestfs: launch: backend registered: uml
+libguestfs: launch: backend registered: libvirt
+libguestfs: launch: backend registered: direct
+libguestfs: launch: backend=libvirt
+libguestfs: launch: tmpdir=/tmp/libguestfstq4ce6
+libguestfs: launch: umask=0022
+libguestfs: launch: euid=0
+libguestfs: libvirt version = 4007000 (4.7.0)
+libguestfs: guest random name = guestfs-01qcf0jdhw2xkguv
+libguestfs: connect to libvirt
+libguestfs: opening libvirt handle: URI = qemu:///system, auth = default+wrapper, flags = 0
+libguestfs: successfully opened libvirt handle: conn = 0x5611309688b0
+libguestfs: qemu version (reported by libvirt) = 3000000 (3.0.0)
+libguestfs: get libvirt capabilities
+libguestfs: parsing capabilities XML
+libguestfs: build appliance
+libguestfs: begin building supermin appliance
+libguestfs: run supermin
+libguestfs: command: run: /usr/bin/supermin
+libguestfs: command: run: \ --build
+libguestfs: command: run: \ --verbose
+libguestfs: command: run: \ --if-newer
+libguestfs: command: run: \ --lock /var/tmp/.guestfs-0/lock
+libguestfs: command: run: \ --copy-kernel
+libguestfs: command: run: \ -f ext2
+libguestfs: command: run: \ --host-cpu x86_64
+libguestfs: command: run: \ /usr/lib64/guestfs/supermin.d
+libguestfs: command: run: \ -o /var/tmp/.guestfs-0/appliance.d
+supermin: version: 5.1.20
+supermin: rpm: detected RPM version 4.14
+supermin: package handler: fedora/rpm
+supermin: acquiring lock on /var/tmp/.guestfs-0/lock
+supermin: if-newer: output does not need rebuilding
+libguestfs: finished building supermin appliance
+libguestfs: command: run: qemu-img
+libguestfs: command: run: \ create
+libguestfs: command: run: \ -f qcow2
+libguestfs: command: run: \ -o backing_file=/var/tmp/.guestfs-0/appliance.d/root,backing_fmt=raw
+libguestfs: command: run: \ /tmp/libguestfstq4ce6/overlay1.qcow2
+Formatting '/tmp/libguestfstq4ce6/overlay1.qcow2', fmt=qcow2 size=4294967296 backing_file=/var/tmp/.guestfs-0/appliance.d/root backing_fmt=raw cluster_size=65536 lazy_refcounts=off refcount_bits=16
+libguestfs: create libvirt XML
+libguestfs: command: run: qemu-img --help | grep -sqE -- '\binfo\b.*-U\b'
+libguestfs: command: run: qemu-img
+libguestfs: command: run: \ info
+libguestfs: command: run: \ -U
+libguestfs: command: run: \ --output json
+libguestfs: command: run: \ /dev/fedora/tst030
+libguestfs: parse_json: qemu-img info JSON output:\n{\n    "virtual-size": 5368709120,\n    "filename": "/dev/fedora/tst030",\n    "format": "raw",\n    "actual-size": 0,\n    "dirty-flag": false\n}\n\n
+libguestfs: libvirt XML:\n<?xml version="1.0"?>\n<domain type="kvm" xmlns:qemu="http://libvirt.org/schemas/domain/qemu/1.0">\n  <name>guestfs-01qcf0jdhw2xkguv</name>\n  <memory unit="MiB">768</memory>\n  <currentMemory unit="MiB">768</currentMemory>\n  <cpu mode="host-passthrough">\n    <model fallback="allow"/>\n  </cpu>\n  <vcpu>1</vcpu>\n  <clock offset="utc">\n    <timer name="rtc" tickpolicy="catchup"/>\n    <timer name="pit" tickpolicy="delay"/>\n    <timer name="hpet" present="no"/>\n  </clock>\n  <os>\n    <type>hvm</type>\n    <kernel>/var/tmp/.guestfs-0/appliance.d/kernel</kernel>\n    <initrd>/var/tmp/.guestfs-0/appliance.d/initrd</initrd>\n    <cmdline>panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdb selinux=0 guestfs_verbose=1 TERM=xterm-256color</cmdline>\n    <bios useserial="yes"/>\n  </os>\n  <on_reboot>destroy</on_reboot>\n  <devices>\n    <rng model="virtio">\n      <backend model="random">/dev/urandom</backend>\n    </rng>\n    <controller type="scsi" index="0" model="virtio-scsi"/>\n    <disk device="disk" type="block">\n      <source dev="/dev/fedora/tst030"/>\n      <target dev="sda" bus="scsi"/>\n      <driver name="qemu" type="raw" cache="unsafe"/>\n      <address type="drive" controller="0" bus="0" target="0" unit="0"/>\n    </disk>\n    <disk type="file" device="disk">\n      <source file="/tmp/libguestfstq4ce6/overlay1.qcow2"/>\n      <target dev="sdb" bus="scsi"/>\n      <driver name="qemu" type="qcow2" cache="unsafe"/>\n      <address type="drive" controller="0" bus="0" target="1" unit="0"/>\n    </disk>\n    <serial type="unix">\n      <source mode="connect" path="/tmp/libguestfsoZgRTo/console.sock"/>\n      <target port="0"/>\n    </serial>\n    <channel type="unix">\n      <source mode="connect" path="/tmp/libguestfsoZgRTo/guestfsd.sock"/>\n      <target type="virtio" name="org.libguestfs.channel.0"/>\n    </channel>\n    <controller type="usb" model="none"/>\n    <memballoon model="none"/>\n  </devices>\n  <qemu:commandline>\n    <qemu:env name="TMPDIR" value="/var/tmp"/>\n  </qemu:commandline>\n</domain>\n
+libguestfs: command: run: ls
+libguestfs: command: run: \ -a
+libguestfs: command: run: \ -l
+libguestfs: command: run: \ -R
+libguestfs: command: run: \ -Z /var/tmp/.guestfs-0
+libguestfs: /var/tmp/.guestfs-0:
+libguestfs: total 4
+libguestfs: drwxr-xr-x.  3 root root unconfined_u:object_r:user_tmp_t:s0   37 Apr  6 13:56 .
+libguestfs: drwxrwxrwt. 13 root root system_u:object_r:tmp_t:s0          4096 Apr  6 13:56 ..
+libguestfs: drwxr-xr-x.  2 root root unconfined_u:object_r:user_tmp_t:s0   46 Apr  6 11:18 appliance.d
+libguestfs: -rw-r--r--.  1 root root unconfined_u:object_r:user_tmp_t:s0    0 Apr  2 19:24 lock
+libguestfs: 
+libguestfs: /var/tmp/.guestfs-0/appliance.d:
+libguestfs: total 420752
+libguestfs: drwxr-xr-x. 2 root root unconfined_u:object_r:user_tmp_t:s0         46 Apr  6 11:18 .
+libguestfs: drwxr-xr-x. 3 root root unconfined_u:object_r:user_tmp_t:s0         37 Apr  6 13:56 ..
+libguestfs: -rw-r--r--. 1 qemu qemu system_u:object_r:virt_content_t:s0     820736 Apr  6 13:56 initrd
+libguestfs: -rwxr-xr-x. 1 qemu qemu system_u:object_r:virt_content_t:s0    9720008 Apr  6 13:56 kernel
+libguestfs: -rw-r--r--. 1 qemu qemu system_u:object_r:virt_content_t:s0 4294967296 Apr  6 13:56 root
+libguestfs: command: run: ls
+libguestfs: command: run: \ -a
+libguestfs: command: run: \ -l
+libguestfs: command: run: \ -Z /tmp/libguestfsoZgRTo
+libguestfs: total 0
+libguestfs: drwxr-xr-x.  2 root root unconfined_u:object_r:user_tmp_t:s0  80 Apr  6 13:56 .
+libguestfs: drwxrwxrwt. 24 root root system_u:object_r:tmp_t:s0          520 Apr  6 13:56 ..
+libguestfs: srw-rw----.  1 root qemu unconfined_u:object_r:user_tmp_t:s0   0 Apr  6 13:56 console.sock
+libguestfs: srw-rw----.  1 root qemu unconfined_u:object_r:user_tmp_t:s0   0 Apr  6 13:56 guestfsd.sock
+libguestfs: launch libvirt guest
+libguestfs: responding to serial console Device Status Report
+\x1b[1;256r\x1b[256;256H\x1b[6n
+Google, Inc.
+Serial Graphics Adapter 07/31/18
+SGABIOS $Id$ (mockbuild@) Tue Jul 31 15:44:07 UTC 2018
+Term: 80x24
+4 0
+\x1b[2JSeaBIOS (version ?-20180724_192412-buildhw-07.phx2.fedoraproject.org-1.fc29)
+Machine UUID 078acab2-5495-48f7-b4b4-58be732439a1
+Booting from ROM...
+\x1b[2J[    0.000000] Linux version 5.0.5-200.fc29.x86_64+debug (mockbuild@bkernel04.phx2.fedoraproject.org) (gcc version 8.3.1 20190223 (Red Hat 8.3.1-2) (GCC)) #1 SMP Wed Mar 27 20:38:00 UTC 2019
+[    0.000000] Command line: panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdb selinux=0 guestfs_verbose=1 TERM=xterm-256color
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x002: 'SSE registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x004: 'AVX registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x008: 'MPX bounds registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x010: 'MPX CSR'
+[    0.000000] x86/fpu: xstate_offset[2]:  576, xstate_sizes[2]:  256
+[    0.000000] x86/fpu: xstate_offset[3]:  832, xstate_sizes[3]:   64
+[    0.000000] x86/fpu: xstate_offset[4]:  896, xstate_sizes[4]:   64
+[    0.000000] x86/fpu: Enabled xstate features 0x1f, context size is 960 bytes, using 'compacted' format.
+[    0.000000] BIOS-provided physical RAM map:
+[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x000000000009f7ff] usable
+[    0.000000] BIOS-e820: [mem 0x000000000009f800-0x000000000009ffff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000000f0000-0x00000000000fffff] reserved
+[    0.000000] BIOS-e820: [mem 0x0000000000100000-0x000000002fffdfff] usable
+[    0.000000] BIOS-e820: [mem 0x000000002fffe000-0x000000002fffffff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000feffc000-0x00000000feffffff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000fffc0000-0x00000000ffffffff] reserved
+[    0.000000] NX (Execute Disable) protection: active
+[    0.000000] SMBIOS 2.8 present.
+[    0.000000] DMI: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20180724_192412-buildhw-07.phx2.fedoraproject.org-1.fc29 04/01/2014
+[    0.000000] Hypervisor detected: KVM
+[    0.000000] kvm-clock: Using msrs 4b564d01 and 4b564d00
+[    0.000000] kvm-clock: cpu 0, msr 19201001, primary cpu clock
+[    0.000000] kvm-clock: using sched offset of 135177120 cycles
+[    0.000003] clocksource: kvm-clock: mask: 0xffffffffffffffff max_cycles: 0x1cd42e4dffb, max_idle_ns: 881590591483 ns
+[    0.000008] tsc: Detected 2304.000 MHz processor
+[    0.000729] last_pfn = 0x2fffe max_arch_pfn = 0x400000000
+[    0.000778] x86/PAT: Configuration [0-7]: WB  WC  UC- UC  WB  WP  UC- WT  
+[    0.004081] found SMP MP-table at [mem 0x000f5d10-0x000f5d1f] mapped at [(____ptrval____)]
+[    0.004184] check: Scanning 1 areas for low memory corruption
+[    0.004211] Using GB pages for direct mapping
+[    0.004360] RAMDISK: [mem 0x2ff27000-0x2ffeffff]
+[    0.004378] ACPI: Early table checksum verification disabled
+[    0.004427] ACPI BIOS Error (bug): A valid RSDP was not found (20181213/tbxfroot-210)
+[    0.004657] No NUMA configuration found
+[    0.004659] Faking a node at [mem 0x0000000000000000-0x000000002fffdfff]
+[    0.004667] NODE_DATA(0) allocated [mem 0x2fefc000-0x2ff26fff]
+[    0.006080] Zone ranges:
+[    0.006085]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+[    0.006087]   DMA32    [mem 0x0000000001000000-0x000000002fffdfff]
+[    0.006089]   Normal   empty
+[    0.006090]   Device   empty
+[    0.006092] Movable zone start for each node
+[    0.006095] Early memory node ranges
+[    0.006097]   node   0: [mem 0x0000000000001000-0x000000000009efff]
+[    0.006099]   node   0: [mem 0x0000000000100000-0x000000002fffdfff]
+[    0.006102] Zeroed struct page in unavailable ranges: 98 pages
+[    0.006103] Initmem setup node 0 [mem 0x0000000000001000-0x000000002fffdfff]
+[    0.009188] SFI: Simple Firmware Interface v0.81 http://simplefirmware.org
+[    0.009220] Intel MultiProcessor Specification v1.4
+[    0.009222] MPTABLE: OEM ID: BOCHSCPU
+[    0.009224] MPTABLE: Product ID: 0.1         
+[    0.009225] MPTABLE: APIC at: 0xFEE00000
+[    0.009246] Processor #0 (Bootup-CPU)
+[    0.009279] IOAPIC[0]: apic_id 0, version 17, address 0xfec00000, GSI 0-23
+[    0.009282] Processors: 1
+[    0.009286] smpboot: Allowing 1 CPUs, 0 hotplug CPUs
+[    0.009309] PM: Registered nosave memory: [mem 0x00000000-0x00000fff]
+[    0.009311] PM: Registered nosave memory: [mem 0x0009f000-0x0009ffff]
+[    0.009312] PM: Registered nosave memory: [mem 0x000a0000-0x000effff]
+[    0.009314] PM: Registered nosave memory: [mem 0x000f0000-0x000fffff]
+[    0.009318] [mem 0x30000000-0xfeffbfff] available for PCI devices
+[    0.009319] Booting paravirtualized kernel on KVM
+[    0.009324] clocksource: refined-jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1910969940391419 ns
+[    0.089126] random: get_random_bytes called from start_kernel+0x9d/0x547 with crng_init=0
+[    0.089136] setup_percpu: NR_CPUS:8192 nr_cpumask_bits:1 nr_cpu_ids:1 nr_node_ids:1
+[    0.089459] percpu: Embedded 494 pages/cpu @(____ptrval____) s1986560 r8192 d28672 u2097152
+[    0.089497] KVM setup async PF for cpu 0
+[    0.089502] kvm-stealtime: cpu 0, msr 2efe4040
+[    0.089510] Built 1 zonelists, mobility grouping on.  Total pages: 193415
+[    0.089512] Policy zone: DMA32
+[    0.089516] Kernel command line: panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdb selinux=0 guestfs_verbose=1 TERM=xterm-256color
+[    0.117319] Memory: 716316K/786032K available (14339K kernel code, 3224K rwdata, 4500K rodata, 4872K init, 18620K bss, 69716K reserved, 0K cma-reserved)
+[    0.117671] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.117786] Kernel/User page tables isolation: enabled
+[    0.117816] ftrace: allocating 39322 entries in 154 pages
+[    0.128705] Running RCU self tests
+[    0.128709] rcu: Hierarchical RCU implementation.
+[    0.128711] rcu: \tRCU lockdep checking is enabled.
+[    0.128712] rcu: \tRCU restricting CPUs from NR_CPUS=8192 to nr_cpu_ids=1.
+[    0.128714] rcu: \tRCU callback double-/use-after-free debug enabled.
+[    0.128716] \tTasks RCU enabled.
+[    0.128717] rcu: RCU calculated value of scheduler-enlistment delay is 100 jiffies.
+[    0.128719] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=1
+[    0.131022] NR_IRQS: 524544, nr_irqs: 256, preallocated irqs: 16
+[    0.131407] Console: colour *CGA 80x25
+[    0.182878] printk: console [ttyS0] enabled
+[    0.183260] Lock dependency validator: Copyright (c) 2006 Red Hat, Inc., Ingo Molnar
+[    0.183964] ... MAX_LOCKDEP_SUBCLASSES:  8
+[    0.184339] ... MAX_LOCK_DEPTH:          48
+[    0.184730] ... MAX_LOCKDEP_KEYS:        8191
+[    0.185131] ... CLASSHASH_SIZE:          4096
+[    0.185526] ... MAX_LOCKDEP_ENTRIES:     32768
+[    0.185939] ... MAX_LOCKDEP_CHAINS:      65536
+[    0.186344] ... CHAINHASH_SIZE:          32768
+[    0.186745]  memory used by lock dependency info: 7775 kB
+[    0.187248]  per task-struct memory footprint: 2688 bytes
+[    0.187731] kmemleak: Kernel memory leak detector disabled
+[    0.188335] APIC: Switch to symmetric I/O mode setup
+[    0.188989] x2apic enabled
+[    0.189531] Switched APIC routing to physical x2apic.
+[    0.190971] ..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
+[    0.191535] clocksource: tsc-early: mask: 0xffffffffffffffff max_cycles: 0x2135f7c97c8, max_idle_ns: 440795273205 ns
+[    0.192495] Calibrating delay loop (skipped) preset value.. 4608.00 BogoMIPS (lpj=2304000)
+[    0.193259] pid_max: default: 32768 minimum: 301
+[    0.193532] LSM: Security Framework initializing
+[    0.193939] Yama: becoming mindful.
+[    0.194494] SELinux:  Disabled at boot.
+[    0.195146] Dentry cache hash table entries: 131072 (order: 8, 1048576 bytes)
+[    0.195558] Inode-cache hash table entries: 65536 (order: 7, 524288 bytes)
+[    0.196498] Mount-cache hash table entries: 2048 (order: 2, 16384 bytes)
+[    0.197091] Mountpoint-cache hash table entries: 2048 (order: 2, 16384 bytes)
+[    0.198698] Disabling memory control group subsystem
+[    0.199245] x86/cpu: User Mode Instruction Prevention (UMIP) activated
+[    0.199489] mce: CPU supports 10 MCE banks
+[    0.199908] Last level iTLB entries: 4KB 0, 2MB 0, 4MB 0
+[    0.200485] Last level dTLB entries: 4KB 0, 2MB 0, 4MB 0, 1GB 0
+[    0.201022] Spectre V2 : Mitigation: Full generic retpoline
+[    0.201485] Spectre V2 : Spectre v2 / SpectreRSB mitigation: Filling RSB on context switch
+[    0.202485] Spectre V2 : Enabling Restricted Speculation for firmware calls
+[    0.203096] Spectre V2 : mitigation: Enabling conditional Indirect Branch Prediction Barrier
+[    0.203490] Speculative Store Bypass: Mitigation: Speculative Store Bypass disabled via prctl and seccomp
+[    0.210251] Freeing SMP alternatives memory: 32K
+[    0.211528] smpboot: CPU0: Intel(R) Core(TM) i5-8259U CPU @ 2.30GHz (family: 0x6, model: 0x8e, stepping: 0xa)
+[    0.212744] Performance Events: Skylake events, Intel PMU driver.
+[    0.213323] ... version:                2
+[    0.213488] ... bit width:              48
+[    0.213870] ... generic registers:      4
+[    0.214235] ... value mask:             0000ffffffffffff
+[    0.214488] ... max period:             000000007fffffff
+[    0.214978] ... fixed-purpose events:   3
+[    0.215333] ... event mask:             000000070000000f
+[    0.215589] rcu: Hierarchical SRCU implementation.
+[    0.216713] random: crng done (trusting CPU's manufacturer)
+[    0.217393] smp: Bringing up secondary CPUs ...
+[    0.217511] smp: Brought up 1 node, 1 CPU
+[    0.217874] smpboot: Max logical packages: 1
+[    0.218256] smpboot: Total of 1 processors activated (4608.00 BogoMIPS)
+[    0.218924] devtmpfs: initialized
+[    0.219377] x86/mm: Memory block size: 128MB
+[    0.222717] DMA-API: preallocated 65548 debug entries
+[    0.223205] DMA-API: debugging enabled by kernel config
+[    0.223491] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275000 ns
+[    0.224385] futex hash table entries: 256 (order: 3, 32768 bytes)
+[    0.224677] pinctrl core: initialized pinctrl subsystem
+[    0.225516] 
+[    0.225666] *************************************************************
+[    0.226265] **     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **
+[    0.226488] **                                                         **
+[    0.227083] **  IOMMU DebugFS SUPPORT HAS BEEN ENABLED IN THIS KERNEL  **
+[    0.227487] **                                                         **
+[    0.228083] ** This means that this kernel is built to expose internal **
+[    0.228487] ** IOMMU data structures, which may compromise security on **
+[    0.229088] ** your system.                                            **
+[    0.229487] **                                                         **
+[    0.230098] ** If you see this message and you are not debugging the   **
+[    0.230487] ** kernel, report this immediately to your vendor!         **
+[    0.231103] **                                                         **
+[    0.231487] **     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **
+[    0.232097] *************************************************************
+[    0.232546] RTC time: 11:56:00, date: 2019-04-06
+[    0.233235] NET: Registered protocol family 16
+[    0.233769] audit: initializing netlink subsys (disabled)
+[    0.234642] cpuidle: using governor menu
+[    0.235132] KVM setup pv remote TLB flush
+[    0.235653] PCI: Using configuration type 1 for base access
+[    0.237510] audit: type=2000 audit(1554551760.846:1): state=initialized audit_enabled=0 res=1
+[    0.242015] HugeTLB registered 1.00 GiB page size, pre-allocated 0 pages
+[    0.242492] HugeTLB registered 2.00 MiB page size, pre-allocated 0 pages
+[    0.243343] cryptd: max_cpu_qlen set to 1000
+[    0.243886] ACPI: Interpreter disabled.
+[    0.244569] vgaarb: loaded
+[    0.245060] SCSI subsystem initialized
+[    0.245603] usbcore: USB support disabled
+[    0.246043] pps_core: LinuxPPS API ver. 1 registered
+[    0.246488] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.247316] PTP clock support registered
+[    0.247556] EDAC MC: Ver: 3.0.0
+[    0.248035] PCI: Probing PCI hardware
+[    0.248536] PCI host bridge to bus 0000:00
+[    0.248903] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    0.249489] pci_bus 0000:00: root bus resource [mem 0x00000000-0xffffffffff]
+[    0.250111] pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+[    0.253181] pci 0000:00:01.1: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
+[    0.253489] pci 0000:00:01.1: legacy IDE quirk: reg 0x14: [io  0x03f6]
+[    0.254086] pci 0000:00:01.1: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
+[    0.254489] pci 0000:00:01.1: legacy IDE quirk: reg 0x1c: [io  0x0376]
+[    0.266993] pci 0000:00:01.0: PIIX/ICH IRQ router [8086:7000]
+[    0.267937] NetLabel: Initializing
+[    0.268271] NetLabel:  domain hash size = 128
+[    0.268488] NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+[    0.269046] NetLabel:  unlabeled traffic allowed by default
+[    0.269701] clocksource: Switched to clocksource kvm-clock
+[    0.309768] VFS: Disk quotas dquot_6.6.0
+[    0.310199] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    0.310995] pnp: PnP ACPI: disabled
+[    0.314851] NET: Registered protocol family 2
+[    0.315757] tcp_listen_portaddr_hash hash table entries: 512 (order: 3, 45056 bytes)
+[    0.316536] TCP established hash table entries: 8192 (order: 4, 65536 bytes)
+[    0.317258] TCP bind hash table entries: 8192 (order: 7, 655360 bytes)
+[    0.318106] TCP: Hash tables configured (established 8192 bind 8192)
+[    0.318765] UDP hash table entries: 512 (order: 4, 98304 bytes)
+[    0.319347] UDP-Lite hash table entries: 512 (order: 4, 98304 bytes)
+[    0.320007] NET: Registered protocol family 1
+[    0.320501] NET: Registered protocol family 44
+[    0.320917] pci 0000:00:01.0: PIIX3: Enabling Passive Release
+[    0.321502] pci 0000:00:00.0: Limiting direct PCI/PCI transfers
+[    0.322056] pci 0000:00:01.0: Activating ISA DMA hang workarounds
+[    0.322783] Unpacking initramfs...
+[    0.324577] Freeing initrd memory: 804K
+[    0.325059] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x2135f7c97c8, max_idle_ns: 440795273205 ns
+[    0.326052] platform rtc_cmos: registered platform RTC device (no PNP device found)
+[    0.327112] check: Scanning for low memory corruption every 60 seconds
+[    0.327892] alg: self-tests disabled
+[    0.328344] cryptomgr_test (33) used greatest stack depth: 14872 bytes left
+[    0.329165] kworker/u2:0 (35) used greatest stack depth: 14040 bytes left
+[    0.330820] Initialise system trusted keyrings
+[    0.331290] Key type blacklist registered
+[    0.331743] workingset: timestamp_bits=36 max_order=18 bucket_order=0
+[    0.337214] zbud: loaded
+[    0.338958] Platform Keyring initialized
+[    0.339699] kworker/u2:0 (41) used greatest stack depth: 13224 bytes left
+[    0.346111] NET: Registered protocol family 38
+[    0.346581] Key type asymmetric registered
+[    0.346961] Asymmetric key parser 'x509' registered
+[    0.347530] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 242)
+[    0.348243] io scheduler mq-deadline registered
+[    0.349307] atomic64_test: passed for x86-64 platform with CX8 and with SSE
+[    0.350252] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+[    0.351143] virtio-pci 0000:00:02.0: PCI->APIC IRQ transform: INT A -> IRQ 10
+[    0.352683] virtio-pci 0000:00:03.0: PCI->APIC IRQ transform: INT A -> IRQ 11
+[    0.354217] virtio-pci 0000:00:04.0: PCI->APIC IRQ transform: INT A -> IRQ 11
+[    0.355705] Serial: 8250/16550 driver, 1 ports, IRQ sharing enabled
+[    0.378503] serial8250: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+[    0.380035] Non-volatile memory driver v1.3
+[    0.380985] Linux agpgart interface v0.103
+[    0.383177] scsi host0: ata_piix
+[    0.383842] scsi host1: ata_piix
+[    0.384233] ata1: PATA max MWDMA2 cmd 0x1f0 ctl 0x3f6 bmdma 0xc0a0 irq 14
+[    0.384857] ata2: PATA max MWDMA2 cmd 0x170 ctl 0x376 bmdma 0xc0a8 irq 15
+[    0.385649] libphy: Fixed MDIO Bus: probed
+[    0.386618] usbserial: usb_serial_init - registering generic driver failed
+[    0.387261] usbserial: usb_serial_init - returning with error -19
+[    0.387879] i8042: PNP: No PS/2 controller found.
+[    0.388296] i8042: Probing ports directly.
+[    0.389321] serio: i8042 KBD port at 0x60,0x64 irq 1
+[    0.389821] serio: i8042 AUX port at 0x60,0x64 irq 12
+[    0.390650] mousedev: PS/2 mouse device common for all mice
+[    0.391976] input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input0
+[    0.393775] input: VirtualPS/2 VMware VMMouse as /devices/platform/i8042/serio1/input/input3
+[    0.394636] rtc_cmos rtc_cmos: registered as rtc0
+[    0.395072] rtc_cmos rtc_cmos: alarms up to one day, 114 bytes nvram
+[    0.395774] device-mapper: uevent: version 1.0.3
+[    0.396339] device-mapper: ioctl: 4.39.0-ioctl (2018-04-03) initialised: dm-devel@redhat.com
+[    0.397628] input: VirtualPS/2 VMware VMMouse as /devices/platform/i8042/serio1/input/input2
+[    0.399019] hidraw: raw HID events driver (C) Jiri Kosina
+[    0.399650] drop_monitor: Initializing network drop monitor service
+[    0.400374] Initializing XFRM netlink socket
+[    0.401025] NET: Registered protocol family 10
+[    0.402711] Segment Routing with IPv6
+[    0.403111] mip6: Mobile IPv6
+[    0.403391] NET: Registered protocol family 17
+[    0.405097] RAS: Correctable Errors collector initialized.
+[    0.405691] AVX2 version of gcm_enc/dec engaged.
+[    0.406101] AES CTR mode by8 optimization enabled
+[    0.408194] sched_clock: Marking stable (350209118, 57278155)->(414136372, -6649099)
+[    0.409254] registered taskstats version 1
+[    0.409905] Loading compiled-in X.509 certificates
+[    0.411126] Loaded X.509 cert 'Fedora kernel signing key: 92196349c27ee4628955cd38a49478188bcda5ca'
+[    0.412075] zswap: loaded using pool lzo/zbud
+[    0.413256] Key type big_key registered
+[    0.413911] Key type encrypted registered
+[    0.414292] ima: No TPM chip found, activating TPM-bypass!
+[    0.414817] ima: Allocated hash algorithm: sha1
+[    0.415234] No architecture policies found
+[    0.416280]   Magic number: 15:493:933
+[    0.416883] rtc_cmos rtc_cmos: setting system clock to 2019-04-06T11:56:00 UTC (1554551760)
+[    0.564254] Freeing unused decrypted memory: 2040K
+[    0.569909] Freeing unused kernel image memory: 4872K
+[    0.572090] Write protecting the kernel read-only data: 22528k
+[    0.577598] Freeing unused kernel image memory: 2036K
+[    0.581205] Freeing unused kernel image memory: 1644K
+[    0.598800] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    0.599883] rodata_test: all tests were successful
+[    0.600702] x86/mm: Checking user space page tables
+[    0.610302] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    0.611084] Run /init as init process
+supermin: mounting /proc
+supermin: ext2 mini initrd starting up: 5.1.20 dietlibc
+supermin: cmdline: panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdb selinux=0 guestfs_verbose=1 TERM=xterm-256color
+supermin: uptime: 0.55 0.15
+supermin: mounting /sys
+supermin: internal insmod crc32-pclmul.ko
+supermin: internal insmod crc32c-intel.ko
+supermin: internal insmod crct10dif-pclmul.ko
+supermin: internal insmod crc32_generic.ko
+supermin: internal insmod nfit.ko
+insmod: init_module: nfit.ko: No such device
+supermin: internal insmod virtio_blk.ko
+supermin: internal insmod virtio_console.ko
+supermin: internal insmod crypto_engine.ko
+supermin: internal insmod virtio_crypto.ko
+supermin: internal insmod failover.ko
+supermin: internal insmod net_failover.ko
+supermin: internal insmod virtio_net.ko
+supermin: internal insmod nd_btt.ko
+supermin: internal insmod nd_pmem.ko
+supermin: internal insmod rpmsg_core.ko
+supermin: internal insmod virtio_rpmsg_bus.ko
+supermin: internal insmod virtio_scsi.ko
+[    0.650336] scsi host2: Virtio SCSI HBA
+[    0.652256] scsi 2:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    0.653970] scsi 2:0:1:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    0.784768] sd 2:0:0:0: Power-on or device reset occurred
+[    0.785796] sd 2:0:0:0: Attached scsi generic sg0 type 0
+[    0.786856] sd 2:0:0:0: [sda] 10485760 512-byte logical blocks: (5.37 GB/5.00 GiB)
+[    0.787724] sd 2:0:0:0: [sda] Write Protect is off
+[    0.788255] sd 2:0:1:0: Power-on or device reset occurred
+[    0.788871] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    0.789867] sd 2:0:1:0: Attached scsi generic sg1 type 0
+[    0.790518] sd 2:0:0:0: [sda] Optimal transfer size 0 bytes < PAGE_SIZE (4096 bytes)
+[    0.791649] sd 2:0:1:0: [sdb] 8388608 512-byte logical blocks: (4.29 GB/4.00 GiB)
+[    0.792398] sd 2:0:1:0: [sdb] Write Protect is off
+[    0.793070] sd 2:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    0.794207] sd 2:0:1:0: [sdb] Optimal transfer size 0 bytes < PAGE_SIZE (4096 bytes)
+[    0.796193]  sda: sda1 sda2
+[    0.798297] sd 2:0:0:0: [sda] Attached SCSI disk
+[    0.798813] sd 2:0:1:0: [sdb] Attached SCSI disk
+supermin: internal insmod virtio_balloon.ko
+supermin: internal insmod virtio_input.ko
+supermin: internal insmod virtio_mmio.ko
+supermin: internal insmod crc-itu-t.ko
+supermin: internal insmod crc4.ko
+supermin: internal insmod crc64.ko
+supermin: internal insmod crc7.ko
+supermin: internal insmod crc8.ko
+supermin: internal insmod libcrc32c.ko
+supermin: picked /sys/block/sdb/dev (8:16) as root device
+supermin: creating /dev/root as block special 8:16
+supermin: mounting new root on /root
+[    0.812126] EXT4-fs (sdb): mounting ext2 file system using the ext4 subsystem
+[    0.816021] EXT4-fs (sdb): mounted filesystem without journal. Opts: 
+supermin: deleting initramfs files
+supermin: chroot
+Starting /init script ...
+[    0.845237] mkdir (207) used greatest stack depth: 12488 bytes left
+[    0.853524] mount (209) used greatest stack depth: 12352 bytes left
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdb selinux=0 guestfs_verbose=1 TERM=xterm-256color == *guestfs_network=1* ]]
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdb selinux=0 guestfs_verbose=1 TERM=xterm-256color == *guestfs_rescue=1* ]]
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdb selinux=0 guestfs_verbose=1 TERM=xterm-256color == *guestfs_noreboot=1* ]]
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdb selinux=0 guestfs_verbose=1 TERM=xterm-256color == *guestfs_boot_analysis=1* ]]
++ '[' '!' -d /sys ']'
++ mkdir -p /sys
++ mount -t sysfs /sys /sys
++ mkdir -p /run
++ mount -t tmpfs -o nosuid,size=20%,mode=0755 tmpfs /run
++ mkdir -p /run/lock
++ ln -s ../run/lock /var/lock
++ test -e /etc/mtab
++ ln -s /proc/mounts /etc/mtab
++ mount -t devtmpfs /dev /dev
++ mkdir -p /dev/pts
++ mount -t devpts /dev/pts /dev/pts
++ mkdir -p /dev/shm
++ mount -t tmpfs -o mode=1777 shmfs /dev/shm
++ [[ panic=1 console=ttyS0 edd=off udevtimeout=6000 udev.event-timeout=6000 no_timer_check printk.time=1 cgroup_disable=memory usbcore.nousb cryptomgr.notests tsc=reliable 8250.nr_uarts=1 root=/dev/sdb selinux=0 guestfs_verbose=1 TERM=xterm-256color == *selinux=1* ]]
++ mkdir -p /run/tmpfiles.d
++ kmod static-nodes --format=tmpfiles --output=/run/tmpfiles.d/kmod.conf
+++ od -x -A n
+++ dd if=/dev/urandom bs=16 count=1 status=none
+[    0.902327] od (227) used greatest stack depth: 11704 bytes left
++ machine_id=' 5b81 013a e7b7 a15c 889a b351 3a10 e991'
++ echo 5b81013ae7b7a15c889ab3513a10e991
++ systemd-tmpfiles --prefix=/dev --prefix=/run --prefix=/var/run --create --boot
+[/usr/lib/tmpfiles.d/mdadm.conf:1] Line references path below legacy directory /var/run/, updating /var/run/mdadm \xe2\x86\x92 /run/mdadm; please update the tmpfiles.d/ drop-in file accordingly.
+[/usr/lib/tmpfiles.d/systemd.conf:11] Unknown group 'utmp'.
+[/usr/lib/tmpfiles.d/systemd.conf:19] Unknown user 'systemd-network'.
+[/usr/lib/tmpfiles.d/systemd.conf:20] Unknown user 'systemd-network'.
+[/usr/lib/tmpfiles.d/systemd.conf:21] Unknown user 'systemd-network'.
+[/usr/lib/tmpfiles.d/systemd.conf:25] Unknown group 'systemd-journal'.
+[/usr/lib/tmpfiles.d/systemd.conf:26] Unknown group 'systemd-journal'.
++ for f in /lib/systemd/systemd-udevd /usr/lib/systemd/systemd-udevd /sbin/udevd /lib/udev/udevd /usr/lib/udev/udevd
++ '[' -x /lib/systemd/systemd-udevd ']'
++ UDEVD=/lib/systemd/systemd-udevd
++ break
++ '[' -z /lib/systemd/systemd-udevd ']'
++ /lib/systemd/systemd-udevd --daemon
+starting version 239
++ udevadm trigger
++ udevadm settle --timeout=600
++ shopt -s nullglob
++ for f in /sys/block/sd*/device/timeout
++ echo 300
++ for f in /sys/block/sd*/device/timeout
++ echo 300
++ for f in /sys/block/{h,s,ub,v}d*/queue/scheduler
++ echo noop
+/init: line 116: echo: write error: Invalid argument
++ for f in /sys/block/{h,s,ub,v}d*/queue/scheduler
++ echo noop
+/init: line 116: echo: write error: Invalid argument
++ shopt -u nullglob
++ ip addr add 127.0.0.1/8 brd + dev lo scope host
++ ip link set dev lo up
+[    1.235077] ip (252) used greatest stack depth: 11400 bytes left
++ test '' = 1
++ mdadm -As --auto=yes --no-degraded
+mdadm: No arrays found in config file or automatically
++ mkdir -p /tmp/lvm
++ touch /tmp/lvm/lvm.conf
++ LVM_SYSTEM_DIR=/tmp/lvm
++ export LVM_SYSTEM_DIR
++ lvmetad
++ modprobe dm_mod
++ lvm pvscan --cache --activate ay
+  2 logical volume(s) in volume group "tpl" now active
++ mdadm -As --auto=yes --run
+mdadm: No arrays found in config file or automatically
++ ldmtool create all
+[
+]
++ test 1 = 1
++ test '' '!=' 1
++ uname -a
+Linux (none) 5.0.5-200.fc29.x86_64+debug #1 SMP Wed Mar 27 20:38:00 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
++ ls -lR /dev
+/dev:
+total 0
+crw-r--r-- 1 root root  10, 235 Apr  6 11:56 autofs
+drwxr-xr-x 2 root root      160 Apr  6 11:56 block
+drwxr-xr-x 2 root root       80 Apr  6 11:56 bsg
+crw------- 1 root root  10, 234 Apr  6 11:56 btrfs-control
+drwxr-xr-x 2 root root     2240 Apr  6 11:56 char
+crw------- 1 root root   5,   1 Apr  6 11:56 console
+lrwxrwxrwx 1 root root       11 Apr  6 11:56 core -> /proc/kcore
+drwxr-xr-x 3 root root       60 Apr  6 11:56 cpu
+crw------- 1 root root  10,  61 Apr  6 11:56 cpu_dma_latency
+crw------- 1 root root  10, 203 Apr  6 11:56 cuse
+drwxr-xr-x 6 root root      120 Apr  6 11:56 disk
+brw-rw---- 1 root disk 253,   0 Apr  6 11:56 dm-0
+brw-rw---- 1 root disk 253,   1 Apr  6 11:56 dm-1
+lrwxrwxrwx 1 root root       13 Apr  6 11:56 fd -> /proc/self/fd
+crw-rw-rw- 1 root root   1,   7 Apr  6 11:56 full
+crw-rw-rw- 1 root root  10, 229 Apr  6 11:56 fuse
+crw------- 1 root root  10, 183 Apr  6 11:56 hwrng
+drwxr-xr-x 3 root root      180 Apr  6 11:56 input
+crw-r--r-- 1 root root   1,  11 Apr  6 11:56 kmsg
+crw-rw---- 1 root disk  10, 237 Apr  6 11:56 loop-control
+drwxr-xr-x 2 root root      100 Apr  6 11:56 mapper
+crw------- 1 root root  10, 227 Apr  6 11:56 mcelog
+crw------- 1 root root   1,   1 Apr  6 11:56 mem
+crw------- 1 root root  10,  58 Apr  6 11:56 memory_bandwidth
+drwxr-xr-x 2 root root       60 Apr  6 11:56 net
+crw------- 1 root root  10,  60 Apr  6 11:56 network_latency
+crw------- 1 root root  10,  59 Apr  6 11:56 network_throughput
+crw-rw-rw- 1 root root   1,   3 Apr  6 11:56 null
+crw------- 1 root root  10, 144 Apr  6 11:56 nvram
+crw------- 1 root root   1,   4 Apr  6 11:56 port
+crw------- 1 root root 108,   0 Apr  6 11:56 ppp
+crw-rw-rw- 1 root root   5,   2 Apr  6 11:56 ptmx
+drwxr-xr-x 2 root root        0 Apr  6 11:56 pts
+crw-rw-rw- 1 root root   1,   8 Apr  6 11:56 random
+drwxr-xr-x 2 root root       60 Apr  6 11:56 raw
+lrwxrwxrwx 1 root root        4 Apr  6 11:56 rtc -> rtc0
+crw------- 1 root root 249,   0 Apr  6 11:56 rtc0
+brw------- 1 root root   8,   0 Apr  6 11:56 sda
+brw------- 1 root root   8,   1 Apr  6 11:56 sda1
+brw------- 1 root root   8,   2 Apr  6 11:56 sda2
+brw------- 1 root root   8,  16 Apr  6 11:56 sdb
+crw------- 1 root root  21,   0 Apr  6 11:56 sg0
+crw------- 1 root root  21,   1 Apr  6 11:56 sg1
+drwxrwxrwt 2 root root       40 Apr  6 11:56 shm
+crw------- 1 root root  10, 231 Apr  6 11:56 snapshot
+drwxr-xr-x 2 root root       80 Apr  6 11:56 snd
+lrwxrwxrwx 1 root root       15 Apr  6 11:56 stderr -> /proc/self/fd/2
+lrwxrwxrwx 1 root root       15 Apr  6 11:56 stdin -> /proc/self/fd/0
+lrwxrwxrwx 1 root root       15 Apr  6 11:56 stdout -> /proc/self/fd/1
+drwxr-xr-x 2 root root       80 Apr  6 11:56 tpl
+crw-rw-rw- 1 root root   5,   0 Apr  6 11:56 tty
+crw------- 1 root root   4,   0 Apr  6 11:56 tty0
+crw------- 1 root root   4,   1 Apr  6 11:56 tty1
+crw------- 1 root root   4,  10 Apr  6 11:56 tty10
+crw------- 1 root root   4,  11 Apr  6 11:56 tty11
+crw------- 1 root root   4,  12 Apr  6 11:56 tty12
+crw------- 1 root root   4,  13 Apr  6 11:56 tty13
+crw------- 1 root root   4,  14 Apr  6 11:56 tty14
+crw------- 1 root root   4,  15 Apr  6 11:56 tty15
+crw------- 1 root root   4,  16 Apr  6 11:56 tty16
+crw------- 1 root root   4,  17 Apr  6 11:56 tty17
+crw------- 1 root root   4,  18 Apr  6 11:56 tty18
+crw------- 1 root root   4,  19 Apr  6 11:56 tty19
+crw------- 1 root root   4,   2 Apr  6 11:56 tty2
+crw------- 1 root root   4,  20 Apr  6 11:56 tty20
+crw------- 1 root root   4,  21 Apr  6 11:56 tty21
+crw------- 1 root root   4,  22 Apr  6 11:56 tty22
+crw------- 1 root root   4,  23 Apr  6 11:56 tty23
+crw------- 1 root root   4,  24 Apr  6 11:56 tty24
+crw------- 1 root root   4,  25 Apr  6 11:56 tty25
+crw------- 1 root root   4,  26 Apr  6 11:56 tty26
+crw------- 1 root root   4,  27 Apr  6 11:56 tty27
+crw------- 1 root root   4,  28 Apr  6 11:56 tty28
+crw------- 1 root root   4,  29 Apr  6 11:56 tty29
+crw------- 1 root root   4,   3 Apr  6 11:56 tty3
+crw------- 1 root root   4,  30 Apr  6 11:56 tty30
+crw------- 1 root root   4,  31 Apr  6 11:56 tty31
+crw------- 1 root root   4,  32 Apr  6 11:56 tty32
+crw------- 1 root root   4,  33 Apr  6 11:56 tty33
+crw------- 1 root root   4,  34 Apr  6 11:56 tty34
+crw------- 1 root root   4,  35 Apr  6 11:56 tty35
+crw------- 1 root root   4,  36 Apr  6 11:56 tty36
+crw------- 1 root root   4,  37 Apr  6 11:56 tty37
+crw------- 1 root root   4,  38 Apr  6 11:56 tty38
+crw------- 1 root root   4,  39 Apr  6 11:56 tty39
+crw------- 1 root root   4,   4 Apr  6 11:56 tty4
+crw------- 1 root root   4,  40 Apr  6 11:56 tty40
+crw------- 1 root root   4,  41 Apr  6 11:56 tty41
+crw------- 1 root root   4,  42 Apr  6 11:56 tty42
+crw------- 1 root root   4,  43 Apr  6 11:56 tty43
+crw------- 1 root root   4,  44 Apr  6 11:56 tty44
+crw------- 1 root root   4,  45 Apr  6 11:56 tty45
+crw------- 1 root root   4,  46 Apr  6 11:56 tty46
+crw------- 1 root root   4,  47 Apr  6 11:56 tty47
+crw------- 1 root root   4,  48 Apr  6 11:56 tty48
+crw------- 1 root root   4,  49 Apr  6 11:56 tty49
+crw------- 1 root root   4,   5 Apr  6 11:56 tty5
+crw------- 1 root root   4,  50 Apr  6 11:56 tty50
+crw------- 1 root root   4,  51 Apr  6 11:56 tty51
+crw------- 1 root root   4,  52 Apr  6 11:56 tty52
+crw------- 1 root root   4,  53 Apr  6 11:56 tty53
+crw------- 1 root root   4,  54 Apr  6 11:56 tty54
+crw------- 1 root root   4,  55 Apr  6 11:56 tty55
+crw------- 1 root root   4,  56 Apr  6 11:56 tty56
+crw------- 1 root root   4,  57 Apr  6 11:56 tty57
+crw------- 1 root root   4,  58 Apr  6 11:56 tty58
+crw------- 1 root root   4,  59 Apr  6 11:56 tty59
+crw------- 1 root root   4,   6 Apr  6 11:56 tty6
+crw------- 1 root root   4,  60 Apr  6 11:56 tty60
+crw------- 1 root root   4,  61 Apr  6 11:56 tty61
+crw------- 1 root root   4,  62 Apr  6 11:56 tty62
+crw------- 1 root root   4,  63 Apr  6 11:56 tty63
+crw------- 1 root root   4,   7 Apr  6 11:56 tty7
+crw------- 1 root root   4,   8 Apr  6 11:56 tty8
+crw------- 1 root root   4,   9 Apr  6 11:56 tty9
+crw------- 1 root root   4,  64 Apr  6 11:56 ttyS0
+crw------- 1 root root  10,  62 Apr  6 11:56 udmabuf
+crw------- 1 root root  10, 239 Apr  6 11:56 uhid
+crw------- 1 root root  10, 223 Apr  6 11:56 uinput
+crw-rw-rw- 1 root root   1,   9 Apr  6 11:56 urandom
+crw------- 1 root root 241,   0 Apr  6 11:56 usbmon0
+crw------- 1 root root   7,   0 Apr  6 11:56 vcs
+crw------- 1 root root   7,   1 Apr  6 11:56 vcs1
+crw------- 1 root root   7, 128 Apr  6 11:56 vcsa
+crw------- 1 root root   7, 129 Apr  6 11:56 vcsa1
+crw------- 1 root root   7,  64 Apr  6 11:56 vcsu
+crw------- 1 root root   7,  65 Apr  6 11:56 vcsu1
+drwxr-xr-x 2 root root       60 Apr  6 11:56 vfio
+crw------- 1 root root  10,  63 Apr  6 11:56 vga_arbiter
+crw------- 1 root root  10, 137 Apr  6 11:56 vhci
+crw------- 1 root root  10, 238 Apr  6 11:56 vhost-net
+crw------- 1 root root  10, 241 Apr  6 11:56 vhost-vsock
+drwxr-xr-x 2 root root       60 Apr  6 11:56 virtio-ports
+crw------- 1 root root 239,   1 Apr  6 11:56 vport1p1
+crw-rw-rw- 1 root root   1,   5 Apr  6 11:56 zero
+
+/dev/block:
+total 0
+lrwxrwxrwx 1 root root 7 Apr  6 11:56 253:0 -> ../dm-0
+lrwxrwxrwx 1 root root 7 Apr  6 11:56 253:1 -> ../dm-1
+lrwxrwxrwx 1 root root 6 Apr  6 11:56 8:0 -> ../sda
+lrwxrwxrwx 1 root root 7 Apr  6 11:56 8:1 -> ../sda1
+lrwxrwxrwx 1 root root 6 Apr  6 11:56 8:16 -> ../sdb
+lrwxrwxrwx 1 root root 7 Apr  6 11:56 8:2 -> ../sda2
+
+/dev/bsg:
+total 0
+crw------- 1 root root 242, 0 Apr  6 11:56 2:0:0:0
+crw------- 1 root root 242, 1 Apr  6 11:56 2:0:1:0
+
+/dev/char:
+total 0
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 10:144 -> ../nvram
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 10:183 -> ../hwrng
+lrwxrwxrwx 1 root root  9 Apr  6 11:56 10:227 -> ../mcelog
+lrwxrwxrwx 1 root root 11 Apr  6 11:56 10:231 -> ../snapshot
+lrwxrwxrwx 1 root root  9 Apr  6 11:56 10:235 -> ../autofs
+lrwxrwxrwx 1 root root 17 Apr  6 11:56 10:236 -> ../mapper/control
+lrwxrwxrwx 1 root root 19 Apr  6 11:56 10:58 -> ../memory_bandwidth
+lrwxrwxrwx 1 root root 21 Apr  6 11:56 10:59 -> ../network_throughput
+lrwxrwxrwx 1 root root 18 Apr  6 11:56 10:60 -> ../network_latency
+lrwxrwxrwx 1 root root 18 Apr  6 11:56 10:61 -> ../cpu_dma_latency
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 10:62 -> ../udmabuf
+lrwxrwxrwx 1 root root 14 Apr  6 11:56 10:63 -> ../vga_arbiter
+lrwxrwxrwx 1 root root 15 Apr  6 11:56 13:32 -> ../input/mouse0
+lrwxrwxrwx 1 root root 15 Apr  6 11:56 13:33 -> ../input/mouse1
+lrwxrwxrwx 1 root root 13 Apr  6 11:56 13:63 -> ../input/mice
+lrwxrwxrwx 1 root root 15 Apr  6 11:56 13:64 -> ../input/event0
+lrwxrwxrwx 1 root root 15 Apr  6 11:56 13:65 -> ../input/event1
+lrwxrwxrwx 1 root root 15 Apr  6 11:56 13:66 -> ../input/event2
+lrwxrwxrwx 1 root root 13 Apr  6 11:56 162:0 -> ../raw/rawctl
+lrwxrwxrwx 1 root root  6 Apr  6 11:56 1:1 -> ../mem
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 1:11 -> ../kmsg
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 1:3 -> ../null
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 1:4 -> ../port
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 1:5 -> ../zero
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 1:7 -> ../full
+lrwxrwxrwx 1 root root  9 Apr  6 11:56 1:8 -> ../random
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 1:9 -> ../urandom
+lrwxrwxrwx 1 root root 12 Apr  6 11:56 202:0 -> ../cpu/0/msr
+lrwxrwxrwx 1 root root 14 Apr  6 11:56 203:0 -> ../cpu/0/cpuid
+lrwxrwxrwx 1 root root  6 Apr  6 11:56 21:0 -> ../sg0
+lrwxrwxrwx 1 root root  6 Apr  6 11:56 21:1 -> ../sg1
+lrwxrwxrwx 1 root root 11 Apr  6 11:56 239:1 -> ../vport1p1
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 241:0 -> ../usbmon0
+lrwxrwxrwx 1 root root 14 Apr  6 11:56 242:0 -> ../bsg/2:0:0:0
+lrwxrwxrwx 1 root root 14 Apr  6 11:56 242:1 -> ../bsg/2:0:1:0
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 249:0 -> ../rtc0
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:0 -> ../tty0
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:1 -> ../tty1
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:10 -> ../tty10
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:11 -> ../tty11
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:12 -> ../tty12
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:13 -> ../tty13
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:14 -> ../tty14
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:15 -> ../tty15
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:16 -> ../tty16
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:17 -> ../tty17
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:18 -> ../tty18
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:19 -> ../tty19
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:2 -> ../tty2
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:20 -> ../tty20
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:21 -> ../tty21
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:22 -> ../tty22
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:23 -> ../tty23
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:24 -> ../tty24
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:25 -> ../tty25
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:26 -> ../tty26
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:27 -> ../tty27
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:28 -> ../tty28
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:29 -> ../tty29
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:3 -> ../tty3
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:30 -> ../tty30
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:31 -> ../tty31
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:32 -> ../tty32
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:33 -> ../tty33
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:34 -> ../tty34
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:35 -> ../tty35
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:36 -> ../tty36
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:37 -> ../tty37
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:38 -> ../tty38
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:39 -> ../tty39
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:4 -> ../tty4
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:40 -> ../tty40
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:41 -> ../tty41
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:42 -> ../tty42
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:43 -> ../tty43
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:44 -> ../tty44
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:45 -> ../tty45
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:46 -> ../tty46
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:47 -> ../tty47
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:48 -> ../tty48
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:49 -> ../tty49
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:5 -> ../tty5
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:50 -> ../tty50
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:51 -> ../tty51
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:52 -> ../tty52
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:53 -> ../tty53
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:54 -> ../tty54
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:55 -> ../tty55
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:56 -> ../tty56
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:57 -> ../tty57
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:58 -> ../tty58
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:59 -> ../tty59
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:6 -> ../tty6
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:60 -> ../tty60
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:61 -> ../tty61
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:62 -> ../tty62
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:63 -> ../tty63
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 4:64 -> ../ttyS0
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:7 -> ../tty7
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:8 -> ../tty8
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 4:9 -> ../tty9
+lrwxrwxrwx 1 root root  6 Apr  6 11:56 5:0 -> ../tty
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 5:1 -> ../console
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 5:2 -> ../ptmx
+lrwxrwxrwx 1 root root  6 Apr  6 11:56 7:0 -> ../vcs
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 7:1 -> ../vcs1
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 7:128 -> ../vcsa
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 7:129 -> ../vcsa1
+lrwxrwxrwx 1 root root  7 Apr  6 11:56 7:64 -> ../vcsu
+lrwxrwxrwx 1 root root  8 Apr  6 11:56 7:65 -> ../vcsu1
+
+/dev/cpu:
+total 0
+drwxr-xr-x 2 root root 80 Apr  6 11:56 0
+
+/dev/cpu/0:
+total 0
+crw------- 1 root root 203, 0 Apr  6 11:56 cpuid
+crw------- 1 root root 202, 0 Apr  6 11:56 msr
+
+/dev/disk:
+total 0
+drwxr-xr-x 2 root root 220 Apr  6 11:56 by-id
+drwxr-xr-x 2 root root  80 Apr  6 11:56 by-partuuid
+drwxr-xr-x 2 root root 120 Apr  6 11:56 by-path
+drwxr-xr-x 2 root root 120 Apr  6 11:56 by-uuid
+
+/dev/disk/by-id:
+total 0
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 dm-name-tpl-root -> ../../dm-1
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 dm-name-tpl-swap -> ../../dm-0
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 dm-uuid-LVM-eBefZV34BzqCyEdlzyJb1mzO0GRju8sA7AqpjYJ12vItD9cdlPcLGAKBBVC7qFZW -> ../../dm-1
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 dm-uuid-LVM-eBefZV34BzqCyEdlzyJb1mzO0GRju8sAtj3OamDxi4li9OyRzMsgSh8FM8SQlhMB -> ../../dm-0
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 lvm-pv-uuid-sqycQ1-FKdm-n4zq-8ojz-xvFW-NQrk-KyyJbO -> ../../sda2
+lrwxrwxrwx 1 root root  9 Apr  6 11:56 scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-0 -> ../../sda
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-0-part1 -> ../../sda1
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-0-0-part2 -> ../../sda2
+lrwxrwxrwx 1 root root  9 Apr  6 11:56 scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-0-1-0 -> ../../sdb
+
+/dev/disk/by-partuuid:
+total 0
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 000cdf76-01 -> ../../sda1
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 000cdf76-02 -> ../../sda2
+
+/dev/disk/by-path:
+total 0
+lrwxrwxrwx 1 root root  9 Apr  6 11:56 pci-0000:00:02.0-scsi-0:0:0:0 -> ../../sda
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 pci-0000:00:02.0-scsi-0:0:0:0-part1 -> ../../sda1
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 pci-0000:00:02.0-scsi-0:0:0:0-part2 -> ../../sda2
+lrwxrwxrwx 1 root root  9 Apr  6 11:56 pci-0000:00:02.0-scsi-0:0:1:0 -> ../../sdb
+
+/dev/disk/by-uuid:
+total 0
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 00a5b86e-46ca-4662-8884-edfc733c8a84 -> ../../dm-1
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 5dbe35b5-91fa-47ec-8092-d59919d6dfb4 -> ../../dm-0
+lrwxrwxrwx 1 root root 10 Apr  6 11:56 66fc4340-c36f-4c4f-9eef-ee73ee42c1a5 -> ../../sda1
+lrwxrwxrwx 1 root root  9 Apr  6 11:56 d6ea4199-e53e-4a3b-9be0-c0010e2f58c0 -> ../../sdb
+
+/dev/input:
+total 0
+drwxr-xr-x 2 root root    100 Apr  6 11:56 by-path
+crw------- 1 root root 13, 64 Apr  6 11:56 event0
+crw------- 1 root root 13, 65 Apr  6 11:56 event1
+crw------- 1 root root 13, 66 Apr  6 11:56 event2
+crw------- 1 root root 13, 63 Apr  6 11:56 mice
+crw------- 1 root root 13, 32 Apr  6 11:56 mouse0
+crw------- 1 root root 13, 33 Apr  6 11:56 mouse1
+
+/dev/input/by-path:
+total 0
+lrwxrwxrwx 1 root root 9 Apr  6 11:56 platform-i8042-serio-0-event-kbd -> ../event0
+lrwxrwxrwx 1 root root 9 Apr  6 11:56 platform-i8042-serio-1-event-mouse -> ../event2
+lrwxrwxrwx 1 root root 9 Apr  6 11:56 platform-i8042-serio-1-mouse -> ../mouse0
+
+/dev/mapper:
+total 0
+crw------- 1 root root 10, 236 Apr  6 11:56 control
+lrwxrwxrwx 1 root root       7 Apr  6 11:56 tpl-root -> ../dm-1
+lrwxrwxrwx 1 root root       7 Apr  6 11:56 tpl-swap -> ../dm-0
+
+/dev/net:
+total 0
+crw-rw-rw- 1 root root 10, 200 Apr  6 11:56 tun
+
+/dev/pts:
+total 0
+c--------- 1 root root 5, 2 Apr  6 11:56 ptmx
+
+/dev/raw:
+total 0
+crw------- 1 root root 162, 0 Apr  6 11:56 rawctl
+
+/dev/shm:
+total 0
+
+/dev/snd:
+total 0
+crw-rw---- 1 root audio 116,  1 Apr  6 11:56 seq
+crw-rw---- 1 root audio 116, 33 Apr  6 11:56 timer
+
+/dev/tpl:
+total 0
+lrwxrwxrwx 1 root root 7 Apr  6 11:56 root -> ../dm-1
+lrwxrwxrwx 1 root root 7 Apr  6 11:56 swap -> ../dm-0
+
+/dev/vfio:
+total 0
+crw------- 1 root root 10, 196 Apr  6 11:56 vfio
+
+/dev/virtio-ports:
+total 0
+lrwxrwxrwx 1 root root 11 Apr  6 11:56 org.libguestfs.channel.0 -> ../vport1p1
++ cat /proc/mounts
+/dev/root / ext2 rw,noatime,block_validity,barrier,user_xattr,acl 0 0
+/proc /proc proc rw,relatime 0 0
+/sys /sys sysfs rw,relatime 0 0
+tmpfs /run tmpfs rw,nosuid,relatime,size=145552k,mode=755 0 0
+/dev /dev devtmpfs rw,relatime,size=358172k,nr_inodes=89543,mode=755 0 0
+/dev/pts /dev/pts devpts rw,relatime,mode=600,ptmxmode=000 0 0
+shmfs /dev/shm tmpfs rw,relatime 0 0
++ cat /proc/mdstat
+Personalities : 
+unused devices: <none>
++ lvm config
++ lvm pvs
+  PV         VG  Fmt  Attr PSize  PFree
+  /dev/sda2  tpl lvm2 a--  <1.09g    0 
++ lvm vgs
+  VG  #PV #LV #SN Attr   VSize  VFree
+  tpl   1   2   0 wz--n- <1.09g    0 
++ lvm lvs
+  LV   VG  Attr       LSize Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  root tpl -wi-a----- 1.08g                                                    
+  swap tpl -wi-a----- 4.00m                                                    
++ ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 brd 127.255.255.255 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
++ ip r
++ cat /etc/resolv.conf
+cat: /etc/resolv.conf: No such file or directory
++ lsmod
+Module                  Size  Used by
+libcrc32c              16384  0
+crc8                   16384  0
+crc7                   16384  0
+crc64                  16384  0
+crc4                   16384  0
+crc_itu_t              16384  0
+virtio_mmio            16384  0
+virtio_input           16384  0
+virtio_balloon         24576  0
+virtio_scsi            24576  2
+virtio_rpmsg_bus       24576  0
+rpmsg_core             16384  1 virtio_rpmsg_bus
+nd_pmem                24576  0
+nd_btt                 28672  1 nd_pmem
+virtio_net             61440  0
+net_failover           24576  1 virtio_net
+failover               16384  1 net_failover
+virtio_crypto          28672  0
+crypto_engine          16384  1 virtio_crypto
+virtio_console         40960  0
+virtio_blk             20480  0
+crc32_generic          16384  0
+crct10dif_pclmul       16384  1
+crc32c_intel           24576  2
+crc32_pclmul           16384  0
++ date
+Sat Apr  6 11:56:01 UTC 2019
++ echo -n 'clocksource: '
+clocksource: + cat /sys/devices/system/clocksource/clocksource0/current_clocksource
+kvm-clock
++ echo -n 'uptime: '
+uptime: + cat /proc/uptime
+1.56 0.18
++ cmd=guestfsd
+++ grep -Eo 'guestfs_channel=[^[:space:]]+' /proc/cmdline
++ eval
++ test x '!=' x
++ test 1 = 1
++ cmd='guestfsd --verbose'
++ test '' = 1
++ false
++ test '' = 1
++ echo guestfsd --verbose
+guestfsd --verbose
++ guestfsd --verbose
+lvm_system_dir = /tmp/lvm
+OCaml daemon loaded
+trying to open virtio-serial channel '/dev/virtio-ports/org.libguestfs.channel.0'
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle
+calling: settle
+libguestfs: recv_from_daemon: received GUESTFS_LAUNCH_FLAG
+libguestfs: appliance is up
+guestfsd: <= mounts (0x2e) request length 40 bytes
+guestfsd: => mounts (0x2e) took 0.00 secs
+guestfsd: <= mount (0x1) request length 64 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda1
+calling: settle
+command: mount '/dev/sda1' '/sysroot//'
+[    1.802720] SGI XFS with ACLs, security attributes, scrub, no debug enabled
+[    1.827752] XFS (sda1): Mounting V5 Filesystem
+[    1.997546] XFS (sda1): Ending clean mount
+guestfsd: => mount (0x1) took 0.33 secs
+guestfsd: <= xfs_growfs (0x157) request length 96 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: xfs_growfs /sysroot/
+guestfsd: => xfs_growfs (0x157) took 0.00 secs
+guestfsd: <= umount (0x2d) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: umount /sysroot/
+[    2.037042] XFS (sda1): Unmounting Filesystem
+guestfsd: => umount (0x2d) took 0.03 secs
+guestfsd: <= pvresize (0x62) request length 56 bytes
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda2
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: lvm pvresize /dev/sda2
+guestfsd: => pvresize (0x62) took 0.03 secs
+guestfsd: <= internal_autosync (0x11a) request length 40 bytes
+umount-all: /proc/mounts: fsname=/dev/root dir=/ type=ext2 opts=rw,noatime,block_validity,barrier,user_xattr,acl freq=0 passno=0
+umount-all: /proc/mounts: fsname=/proc dir=/proc type=proc opts=rw,relatime freq=0 passno=0
+umount-all: /proc/mounts: fsname=/sys dir=/sys type=sysfs opts=rw,relatime freq=0 passno=0
+umount-all: /proc/mounts: fsname=tmpfs dir=/run type=tmpfs opts=rw,nosuid,relatime,size=145552k,mode=755 freq=0 passno=0
+umount-all: /proc/mounts: fsname=/dev dir=/dev type=devtmpfs opts=rw,relatime,size=358172k,nr_inodes=89543,mode=755 freq=0 passno=0
+umount-all: /proc/mounts: fsname=/dev/pts dir=/dev/pts type=devpts opts=rw,relatime,mode=600,ptmxmode=000 freq=0 passno=0
+umount-all: /proc/mounts: fsname=shmfs dir=/dev/shm type=tmpfs opts=rw,relatime freq=0 passno=0
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sdb
+calling: settle
+commandrvf: stdout=n stderr=y flags=0x0
+commandrvf: udevadm --debug settle -E /dev/sda
+calling: settle
+fsync /dev/sda
+guestfsd: => internal_autosync (0x11a) took 0.03 secs
+libguestfs: calling virDomainDestroy flags=VIR_DOMAIN_DESTROY_GRACEFUL
+libguestfs: closing guestfs handle 0x561130975130 (state 0)
+libguestfs: command: run: rm
+libguestfs: command: run: \ -rf /tmp/libguestfstq4ce6
+libguestfs: command: run: rm
+libguestfs: command: run: \ -rf /tmp/libguestfsoZgRTo

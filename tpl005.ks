@@ -20,15 +20,15 @@ keyboard --vckeymap=us --xlayouts='us'
 lang en_US.UTF-8
 
 # Network information
-network --bootproto=static --device=eth0 --gateway=192.168.122.1 --ip={{ makekickstart_ipv4 }} --nameserver=8.8.4.4,8.8.8.8 --netmask=255.255.255.0 --ipv6=auto --activate
-network --hostname={{ inventory_hostname }}.home.org
+network --bootproto=static --device=eth0 --gateway=192.168.122.1 --ip=192.168.122.5 --nameserver=8.8.4.4,8.8.8.8 --netmask=255.255.255.0 --ipv6=auto --activate
+network --hostname=tpl005.home.org
 
 # Root password
 rootpw --iscrypted \$6\$VqpnR1p7fX77VP1I\$y2bB8RshiFXMAgzHed4RIaZUR1ny8GnXGCCw8uHRItsvx/xsnqsx0X/YMwIuRfKKmBQ5FCeTUkP9mnXDzri9u1
 # System services
 services --enabled="chronyd"
 # System timezone
-timezone {{ makekickstart_timezone }} --isUtc
+timezone Europe/Amsterdam --isUtc
 # System bootloader configuration.
 zerombr
 bootloader --append=" crashkernel=auto" --location=mbr --boot-drive=vda

@@ -109,6 +109,31 @@ need git too:
 
 # yum -y install git
 
+Now we install the software under a normal user account
+called "allard" (change with your name if you like). So we
+need to add a user. Since the user needs to be able to
+execute privileged commands later, we also add the user to
+the wheel group and make sure it can execute as root without
+providing a password:
+
+#
+useradd allard
+echo redhat | passwd --stdin allard
+usermod -a -G wheel allard
+sed -i -e 's/^\(%wheel[ \t]\+ALL=(ALL)[ \t]\+ALL\)$/#\1/' -e 's/^# \(%wheel[ \t]\+ALL=(ALL)[ \t]\+NOPASSWD:[ \t]\+ALL\)$/\1/' /etc/sudoers
+
+Log out from the root account and login as "allard". Then
+execute:
+
+$
+git clone https://github.com/aberends/clone_vm.git
+
+Next we execute the script:
+
+$
+cd clone_vm
+./create_tpl_vm.sh
+
 We use the following commands:
 
 - ansible

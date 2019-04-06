@@ -25,8 +25,12 @@
     failed_when: false
 
   - name: Remove disk of VM
-    command: virsh vol-delete {{ inventory_hostname }} {{ cleanupvm_vg }}
+    command: virsh vol-delete {{ item }} {{ cleanupvm_vg }}
     args:
-      removes: /dev/{{ cleanupvm_vg }}/{{ inventory_hostname }}
+      removes: /dev/{{ cleanupvm_vg }}/{{ item }}
+    loop:
+    - "{{ inventory_hostname }}"
+    - t{{ inventory_hostname }}
+    - d{{ inventory_hostname }}
   become: true
   delegate_to: localhost

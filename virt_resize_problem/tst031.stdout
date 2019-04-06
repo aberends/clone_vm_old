@@ -1,0 +1,64 @@
+command line: virt-resize --verbose --resize /dev/sda1=500M --expand /dev/sda2 /dev/fedora/ttpl004 /dev/fedora/tst031
+[   0.0] Examining /dev/fedora/ttpl004
+/dev/sda1:
+	partition data: 1 1048576-149946367 (148897792 bytes)
+	partition sector data: 2048-292863 (290816 sectors)
+	target partition sector data: 0-0 (1 sectors)
+	bootable: false
+	partition ID: 0x83
+	content: filesystem xfs (145395712 bytes)
+	label: (none)
+	GUID: (none)
+/dev/sda2:
+	partition data: 2 149946368-2147483647 (1997537280 bytes)
+	partition sector data: 292864-4194303 (3901440 sectors)
+	target partition sector data: 0-0 (1 sectors)
+	bootable: false
+	partition ID: 0x83
+	content: LVM PV (1996488704 bytes)
+	label: (none)
+	GUID: (none)
+2 logical volumes found
+/dev/tpl/root:
+	content: filesystem xfs (1981808640 bytes)
+/dev/tpl/swap:
+	content: swap
+**********
+
+Summary of changes:
+
+/dev/sda1: This partition will be resized from 142.0M to 500.0M.  The 
+filesystem xfs on /dev/sda1 will be expanded using the ‘xfs_growfs’ 
+method.
+
+/dev/sda2: This partition will be resized from 1.9G to 4.5G.  The LVM PV on 
+/dev/sda2 will be expanded using the ‘pvresize’ method.
+
+**********
+[   4.0] Setting up initial partition table on /dev/fedora/tst031
+After calculate target partitions:
+/dev/sda1:
+	partition data: 1 1048576-149946367 (148897792 bytes)
+	partition sector data: 2048-292863 (290816 sectors)
+	target partition sector data: 2048-1026047 (1024000 sectors)
+	bootable: false
+	partition ID: 0x83
+	content: filesystem xfs (145395712 bytes)
+	label: (none)
+	GUID: (none)
+/dev/sda2:
+	partition data: 2 149946368-2147483647 (1997537280 bytes)
+	partition sector data: 292864-4194303 (3901440 sectors)
+	target partition sector data: 1026048-10483327 (9457280 sectors)
+	bootable: false
+	partition ID: 0x83
+	content: LVM PV (1996488704 bytes)
+	label: (none)
+	GUID: (none)
+[   5.3] Copying /dev/sda1
+[   5.7] Copying /dev/sda2
+[  17.3] Expanding /dev/sda1 using the ‘xfs_growfs’ method
+[  17.6] Expanding /dev/sda2 using the ‘pvresize’ method
+
+Resize operation completed with no errors.  Before deleting the old disk, 
+carefully check that the resized disk boots and works correctly.

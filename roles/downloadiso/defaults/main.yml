@@ -4,14 +4,17 @@
 # (redirection) page is returned with the URL that ends with
 # the trailing '/'.
 downloadiso_centos7_url: 'https://www.centos.org/download/'
+#downloadiso_centos7_url: 'https://getfedora.org/en/server/download/'
 
 # AB: the pattern is consumed by "grep -o". So it must match
 # a complete URL.
 downloadiso_url_pattern: 'http://.*-x86_64-Minimal-.*\.iso'
+#downloadiso_url_pattern: 'https://.*Fedora-Server-dvd-x86_64-29-.*\.iso'
 
 # AB: the glob pattern is consumed by the shell, so it must
 # adhere to the fnmatch(3) rules.
 downloadiso_iso_pattern: '*-x86_64-Minimal-*.iso'
+#downloadiso_iso_pattern: 'Fedora-Server-dvd-x86_64-29-*.iso'
 
 # AB: the ISO and software are located in a certain
 # directory. The default value is set here.

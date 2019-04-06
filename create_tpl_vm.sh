@@ -49,6 +49,6 @@ else
 fi
 #export ANSIBLE_HOST_KEY_CHECKING="False"
 export ANSIBLE_RETRY_FILES_ENABLED="False"
-TESTDOMAIN=tpl003
+TESTDOMAIN=tpl005
 
 ansible-playbook --user root --inventory=$TESTDOMAIN, --limit=$TESTDOMAIN --extra-vars 'ansible_ssh_pass=redhat ansible_become_pass=redhat' create_tpl_vm.yml${VERBOSITY}
